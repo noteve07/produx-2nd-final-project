@@ -1,0 +1,19 @@
+Bagtas Retail Company Ltd.
+352,7046.29
+874.51, 1053.57, 996.73, 1204.60, 1038.90, 914.12, 963.86
+products,category,costprice,sellingprice,quantity
+Smartwatch,Electronics,6500,7800,18
+Milk,Food,45,55,320
+Headphones,Accessories,1800,2300,95
+Chicken,Food,140,170,85
+Printer,Office Supplies,5500,6800,37
+Apple,Food,8,12,720
+Laptop,Electronics,28000,33000,22
+Tablet,Electronics,7500,9500,28
+Eggs,Food,4,6,1100
+Monitor,Electronics,11000,14000,20
+Bread,Food,12,18,480
+Camera,Electronics,22000,27000,13
+Keyboard,Accessories,1200,1600,65
+Rice,Food,35,45,900
+Smartphone,Electronics,13000,16000,45

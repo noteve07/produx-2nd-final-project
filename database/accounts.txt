@@ -1,0 +1,9 @@
+companyID,password
+Bagtas1024,bagtascompany123
+Barata0712,baratacompany456
+
+Bagtas1204,bagtascompany123
+Bagtas10244,bagtascompany1234
+Newaccount,bagtascompany123asdsad
+Bagtas10245,bagtascompany1234
+barata123,baratacompany123

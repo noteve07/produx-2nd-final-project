@@ -1,0 +1,19 @@
+Barata Marketing Corporation
+420,8200.53
+935.67, 1110.78, 1065.44, 1265.32, 1108.76, 980.54, 1035.89
+products,category,costprice,sellingprice,quantity
+Shampoo,Hygiene,120,150,250
+Orange Juice,Food,55,70,320
+Lipstick,Cosmetics,200,250,180
+Beef,Food,190,240,90
+Toothpaste,Hygiene,30,45
+Banana,Food,12,18,750
+Face Cream,Cosmetics,350,450,130
+Body Lotion,Cosmetics,250,320,160
+Butter,Food,35,50,600
+Yogurt,Food,28,40,550
+Hand Sanitizer,Hygiene,40,60,400
+Shaving Cream,Hygiene,70,100,220
+Deodorant,Hygiene,90,120,300
+Pasta,Food,45,60,850
+Hair Gel,Cosmetics,150,200,140
