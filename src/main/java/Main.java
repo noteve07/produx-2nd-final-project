@@ -1,5 +1,5 @@
 /**
- * PRODUX: A BUSINESS INVENTORY MANAGEMENT SYSTEM
+ * PRODUX: AN ADT-DRIVEN BUSINESS INVENTORY MANAGEMENT SYSTEM
  * 
  * @author Barata, Nicko James E.
  * @author Bagtas, Miguel Grant V.
@@ -719,6 +719,7 @@ public class Main implements ActionListener, ListSelectionListener {
     
     
     public void initializeAboutPanel() {
+        // PANEL: About
         panelAbout = new JPanel();
         panelAbout.add(new JLabel("About Content"));
     }
