@@ -8,7 +8,7 @@
  * CTCC-0323
  *
  */
-
+// Nicko kita mo to panis ka na naman boii programmer na ko 
 
 import java.util.*;
 import javax.swing.*;
