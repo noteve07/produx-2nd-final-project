@@ -2,7 +2,7 @@
  * PRODUX: A BUSINESS INVENTORY MANAGEMENT SYSTEM
  * 
  * @author Barata, Nicko James E.
- * @co-author Bagtas, Miguel Grant V.
+ * @author Bagtas, Miguel Grant V.
  * 
  * BSCS-SD1A 
  * CTCC-0323
@@ -14,7 +14,7 @@ import java.util.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Arc2D;
+import java.awt.geom.RoundRectangle2D;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,55 +32,71 @@ import javax.swing.table.TableRowSorter;
 public class Main implements ActionListener, ListSelectionListener {
     // frame and panel components
     JFrame frame;
-    JPanel panelLogin, panelBackground, panelNavigation, panelHeader;
-    JPanel panelDashboard, panelInventory, panelHistory, panelAccount, panelAbout;
     
-    // login and background components
-    private ImageIcon bgImage;
-    private JLabel bgImageHandler;
-    private JLabel labelProdux, labelCompanyID, labelPassword, labelMessage;
+    // declare login components
+    private JPanel panelLogin;
+    private JPanel panelBackground;
+    private JLabel labelProdux;
+    private JLabel labelCompanyID;
+    private JLabel labelPassword;
+    private JLabel labelMessage;
     private JTextField fieldCompanyID;
     private JPasswordField fieldPassword;
-    private JButton buttonLogIn, buttonRegister;
+    private JButton buttonLogIn;
+    private JButton buttonRegister;
     private JCheckBox showPassword;
-    private JTextField nameField, categoryField, priceField, quantityField;
-    private JTextField updateNameField, updateCategoryField;
-    private JTextField updatePriceField, updateQuantityField;
     
-    // navigation components
+    // declare navigation components
+    private JPanel panelNavigation;
     private JLabel appNameLabel;
+    private JPanel panelHeader;
     private JLabel companyName;
-    private JButton dashboardNavButton, inventoryNavButton, historyNavButton;
-    private JButton accountNavButton, aboutNavButton;
+    private JButton dashboardNavButton; 
+    private JButton inventoryNavButton; 
+    private JButton historyNavButton;
+    private JButton accountNavButton; 
+    private JButton aboutNavButton;
     
-    // dashboard components
-    private JLabel labelProductSoldValue,labelRevenueValue, labelInStockValue;
+    // declare dashboard components
+    private JPanel panelDashboard;
+    private JLabel labelProductSoldValue;
+    private JLabel labelRevenueValue;
+    private JLabel labelInStockValue;
     private int numSoldProducts = 832;
     private double revenue = 7450.49;
     private int inStock = 2671;
-    ArrayList<Double> dailyProfitData = new ArrayList<Double>();
     
-    // inventory components
+    // declare inventory components
+    private JPanel panelInventory;
     private JPanel tablePanel, detailPanel;
     private JLabel labelHeaderTable, labelDetailProduct, labelDetailCategory;
     private JLabel labelDetailCost, labelDetailPrice, labelDetailQuantity;
     private JTextField fieldHeaderTable, fieldDetailProduct, fieldDetailCategory;
     private JTextField fieldDetailCost, fieldDetailPrice, fieldDetailQuantity;
     private JButton addButton, soldButton, updateButton, deleteButton;
-    private JButton buttonAdd, buttonSold, buttonUpdate, buttonRemove;
     private JTable productTable;
     private DefaultTableModel tableModel;
     
-    // history components
+    // declare history components
+    private JPanel panelHistory;
     private JPanel historyTablePanel;
     private JLabel labelHistoryHeader;
     private JTable historyTable;
     private DefaultTableModel historyTableModel;
     
-    // data holder
+    // declare account panel
+    private JPanel panelAccount;
+    
+    // declare about panel
+    private JPanel panelAbout;
+    
+    // data: inventory
+    ArrayList<Double> dailyProfitData = new ArrayList<Double>();
+    ArrayList<Product> productList = new ArrayList<Product>();
+    
+    // data: accounts
     HashMap<String, String> accounts = new HashMap<String, String>();
     ArrayList<String> existingAccounts = new ArrayList<String>();
-    ArrayList<Product> productList = new ArrayList<Product>();
     
     // color objects
     private final Color defaultButtonColor = new Color(44, 54, 59);
@@ -90,15 +106,15 @@ public class Main implements ActionListener, ListSelectionListener {
     private final Color textColor = new Color(228, 239, 240);
 
     // other properties
-    private int WIDTH = 900;
-    private int HEIGHT = 600;
+    private final int WIDTH = 900;
+    private final int HEIGHT = 600;
     String headerText;
     
     
     
     
     public Main() {
-        // initialize Data and Components
+        // initialize datya and components
         initializeData();
         initializeLoginPanel();
         initializeBackgroundPanel();
@@ -110,11 +126,8 @@ public class Main implements ActionListener, ListSelectionListener {
         initializeAboutPanel();
         initializeAccountPanel();
         initializeFrame();
-        
-        // set login and background panel visible to true
-        panelLogin.setVisible(true);
-        panelBackground.setVisible(true);
     }
+    
     
     
     
@@ -140,17 +153,116 @@ public class Main implements ActionListener, ListSelectionListener {
         frame.add(panelHistory);
         frame.add(panelAccount);
         frame.add(panelAbout);
+        
+        // set initial visibility of panels
+        panelBackground.setVisible(true);
+        panelLogin.setVisible(true);
+        panelNavigation.setVisible(false);
+        panelHeader.setVisible(false);
+        panelDashboard.setVisible(false);
+        panelInventory.setVisible(false);
+        panelHistory.setVisible(false);
     }
     
     
     
-    public void initializeBackgroundPanel() {
-        // panel properties
-        panelBackground = new JPanel();
+    
+    public void initializeLoginPanel() {
+        // PANEL: login
+        panelLogin = new JPanel();
         panelLogin.setLayout(null);
+        panelLogin.setBounds(WIDTH / 3, HEIGHT / 4 - 60, WIDTH / 3, HEIGHT / 2 + 50);
+        panelLogin.setBackground(loginPanelBgColor);
+
+        // LABEL: login
+        labelProdux = new JLabel("LOG IN");
+        labelProdux.setFont(new Font("Poppins", Font.BOLD, 34));
+        labelProdux.setForeground(new Color(146, 222, 192));
+        labelProdux.setHorizontalAlignment(SwingConstants.CENTER);
+        labelProdux.setBounds(75, 15, 150, 50);
+        panelLogin.add(labelProdux);
+
+        // LABEL: company id
+        labelCompanyID = new JLabel("Company ID:");
+        labelCompanyID.setFont(new Font("Poppins", Font.BOLD, 14));
+        labelCompanyID.setForeground(textColor);
+        labelCompanyID.setBounds(47, 75, 100, 30);
+        panelLogin.add(labelCompanyID);
+
+        // FIELD: company id
+        fieldCompanyID = new JTextField();
+        fieldCompanyID.setFont(new Font("Lato", Font.PLAIN, 12));
+        fieldCompanyID.setForeground(Color.BLACK);
+        fieldCompanyID.setBackground(new Color(242, 245, 255));
+        fieldCompanyID.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        fieldCompanyID.setBounds(47, 75 + 35, 200, 30);
+        panelLogin.add(fieldCompanyID);
+
+        // LABEL: password
+        labelPassword = new JLabel("Password:");
+        labelPassword.setFont(new Font("Poppins", Font.BOLD, 14));
+        labelPassword.setForeground(textColor);
+        labelPassword.setBounds(47, 75 + 80, 100, 30);
+        panelLogin.add(labelPassword);
+
+        // FIELD: password
+        fieldPassword = new JPasswordField();
+        fieldPassword.setFont(new Font("Lato", Font.PLAIN, 12));
+        fieldPassword.setForeground(Color.BLACK);
+        fieldPassword.setBackground(new Color(242, 245, 255));
+        fieldPassword.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        fieldPassword.setBounds(47, 189, 200, 30);
+        panelLogin.add(fieldPassword);
+
+        // CHECKBOX: Show Password
+        showPassword = new JCheckBox("Show Password");
+        showPassword.setFont(new Font("Poppins", Font.PLAIN, 12));
+        showPassword.setForeground(textColor);
+        showPassword.setBackground(loginPanelBgColor);
+        showPassword.setFocusPainted(false);
+        showPassword.setBorderPainted(false);
+        showPassword.setBounds(47, 222, 200, 30);
+        showPassword.addActionListener(this);
+        panelLogin.add(showPassword);
+
+        // LABEL: login message
+        labelMessage = new JLabel("");
+        labelMessage.setFont(new Font("Poppins", Font.BOLD, 12));
+        labelMessage.setForeground(textColor);
+        labelMessage.setHorizontalAlignment(SwingConstants.CENTER);
+        labelMessage.setBounds(0, 315, 300, 30);
+        panelLogin.add(labelMessage);
+
+        // BUTTON: log in
+        buttonLogIn = new JButton("Log In");
+        buttonLogIn.setFont(new Font("Lato", Font.BOLD, 16));
+        buttonLogIn.setForeground(textColor);
+        buttonLogIn.setBackground(selectedButtonColor);
+        buttonLogIn.setFocusPainted(false);
+        buttonLogIn.setBorderPainted(false);
+        buttonLogIn.setBounds(47, 270, 95, 40);
+        buttonLogIn.addActionListener(this);
+        panelLogin.add(buttonLogIn);
+
+        // BUTTON: register
+        buttonRegister = new JButton("Register");
+        buttonRegister.setFont(new Font("Lato", Font.PLAIN, 14));
+        buttonRegister.setForeground(textColor);
+        buttonRegister.setBackground(defaultButtonColor);
+        buttonRegister.setFocusPainted(false);
+        buttonRegister.setBorderPainted(true);
+        buttonRegister.setBounds(152, 270, 95, 40);
+        buttonRegister.addActionListener(this);
+        panelLogin.add(buttonRegister);
+    }
+    
+    
+    public void initializeBackgroundPanel() {
+        // PANEL: background
+        panelBackground = new JPanel();
         panelBackground.setBounds(0, 0, WIDTH, HEIGHT);
         
-        // background image
+        // IMAGE: background image
         ImageIcon bgImageFile = new ImageIcon("images/background_login.jpg");
         Image bgImage = bgImageFile.getImage();
         Image scaledImage = bgImage.getScaledInstance(WIDTH, HEIGHT, Image.SCALE_SMOOTH);
@@ -158,122 +270,19 @@ public class Main implements ActionListener, ListSelectionListener {
         JLabel bgHandle = new JLabel(background);
         bgHandle.setBounds(0, 0, 900, 600);
         panelBackground.add(bgHandle);
-        panelBackground.setVisible(true);
     }
     
-    
-    
-    public void initializeLoginPanel() {
-        // login panel properties
-        panelLogin = new JPanel();
-        panelLogin.setLayout(null);
-        panelLogin.setBounds(WIDTH / 3, HEIGHT / 4 - 60, WIDTH / 3, HEIGHT / 2 + 50);
-        panelLogin.setBackground(loginPanelBgColor);
-        panelLogin.setVisible(true);
-        
-        // create components
-        labelProdux = new JLabel("LOG IN");
-        labelCompanyID = new JLabel("Company ID:");
-        labelPassword = new JLabel("Password:");
-        labelMessage = new JLabel("");
-        fieldCompanyID = new JTextField();
-        fieldPassword = new JPasswordField();
-        showPassword = new JCheckBox("Show Password");
-        buttonLogIn = new JButton("Log In");
-        buttonRegister = new JButton("Register");
-
-        // set fonts
-        labelProdux.setFont(new Font("Poppins", Font.BOLD, 34));
-        labelCompanyID.setFont(new Font("Poppins", Font.BOLD, 14));
-        labelPassword.setFont(new Font("Poppins", Font.BOLD, 14));
-        labelMessage.setFont(new Font("Poppins", Font.BOLD, 12));
-        fieldCompanyID.setFont(new Font("Lato", Font.PLAIN, 12));
-        fieldPassword.setFont(new Font("Lato", Font.PLAIN, 12));
-        showPassword.setFont(new Font("Poppins", Font.PLAIN, 12));
-        buttonLogIn.setFont(new Font("Lato", Font.BOLD, 16));
-        buttonRegister.setFont(new Font("Lato", Font.PLAIN, 14));
-        labelProdux.setHorizontalAlignment(SwingConstants.CENTER);
-        labelMessage.setHorizontalAlignment(SwingConstants.CENTER);
-
-        // set colors
-        labelProdux.setForeground(new Color(146, 222, 192));
-        labelProdux.setBackground(loginPanelBgColor);
-        labelCompanyID.setForeground(textColor);
-        labelPassword.setForeground(textColor);
-        labelMessage.setForeground(textColor);
-        fieldCompanyID.setForeground(Color.BLACK);
-        fieldPassword.setForeground(Color.BLACK);
-        showPassword.setForeground(textColor);
-        showPassword.setBackground(loginPanelBgColor);
-        buttonLogIn.setForeground(textColor);
-        buttonLogIn.setBackground(selectedButtonColor);
-        buttonRegister.setForeground(textColor);
-        buttonRegister.setBackground(defaultButtonColor);
-        
-        // set focus and border painted to false
-        showPassword.setFocusPainted(false);
-        showPassword.setBorderPainted(false);
-        buttonLogIn.setFocusPainted(false);
-        buttonLogIn.setBorderPainted(false);
-        buttonRegister.setFocusPainted(false);
-        buttonRegister.setBorderPainted(true);
-
-        // modern text field look
-        fieldCompanyID.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        fieldPassword.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        fieldCompanyID.setBackground(new Color(242, 245, 255));
-        fieldPassword.setBackground(new Color(242, 245, 255));
-        
-        // setBounds and add components
-        int labelWidth = 100;
-        int fieldWidth = 200;
-        int height = 30;
-        int verticalSpacing = 10;
-        int xLabel = (WIDTH / 3 - fieldWidth) / 2 - 3;
-        int xField = xLabel;
-        int yStart = 75;
-        int buttonWidth = 95;
-            
-        labelProdux.setBounds(75, 15, 150, 50);
-        labelCompanyID.setBounds(xLabel, yStart, labelWidth, height);
-        fieldCompanyID.setBounds(xField, yStart + height + 5, fieldWidth, height);
-        labelPassword.setBounds(xLabel, yStart + 2 * (height + verticalSpacing), labelWidth, height);
-        fieldPassword.setBounds(xField, yStart + 3 * (height + verticalSpacing)-6, fieldWidth, height);
-        showPassword.setBounds(xField, yStart + 4 * (height + verticalSpacing-2)-5, fieldWidth, height);
-        labelMessage.setBounds(0, yStart + 6 * (height + verticalSpacing), 300, height);
-        buttonLogIn.setBounds(xField, yStart + 5 * (height + verticalSpacing)-5, buttonWidth, 40);
-        buttonRegister.setBounds(xField + buttonWidth + 10, yStart + 5 * (height + verticalSpacing)-5, buttonWidth, 40);
-
-        // add components to panel
-        panelLogin.add(labelProdux);
-        panelLogin.add(labelCompanyID);
-        panelLogin.add(fieldCompanyID);
-        panelLogin.add(labelPassword);
-        panelLogin.add(fieldPassword);
-        panelLogin.add(showPassword);
-        panelLogin.add(labelMessage);
-        panelLogin.add(buttonLogIn);
-        panelLogin.add(buttonRegister);
-
-        // add action listeners
-        buttonLogIn.addActionListener(this);
-        buttonRegister.addActionListener(this);
-        showPassword.addActionListener(this);  
-        
-        panelLogin.setVisible(true);
-    }
     
     
     
     public void initializeNavigationPanel() {
-        // navigation panel properties
-        panelNavigation = new JPanel();
+        // PANEL: navigation
         panelNavigation = new JPanel();
         panelNavigation.setLayout(null);
         panelNavigation.setBounds(0, 0, WIDTH / 5, HEIGHT);
         panelNavigation.setBackground(new Color(71, 93, 105));
 
-        // initialize components
+        // LABEL: app name
         appNameLabel = new JLabel("PRODUX");
         appNameLabel.setFont(new Font("Poppins", Font.BOLD, 26));
         appNameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -281,66 +290,55 @@ public class Main implements ActionListener, ListSelectionListener {
         appNameLabel.setForeground(new Color(146, 222, 192));
         appNameLabel.setBounds(33, 0, 180, 80);
         panelNavigation.add(appNameLabel);
-        JSeparator appNameSeparator = new JSeparator();
-        appNameSeparator.setForeground(new Color(50, 50, 50));
 
-        // create modern navigation buttons
-        dashboardNavButton = createModernButton("Dashboard");
-        inventoryNavButton = createModernButton("Inventory");
-        historyNavButton = createModernButton("History");
-        accountNavButton = createModernButton("Account");
-        aboutNavButton = createModernButton("About");
-
-        // setbounds and positioning
-        dashboardNavButton.setBounds(0, 80, 180, 40);
-        inventoryNavButton.setBounds(0, 120, 180, 40);
-        historyNavButton.setBounds(0, 160, 180, 40);
-        accountNavButton.setBounds(0, 200, 180, 40);
-        aboutNavButton.setBounds(0, 240, 180, 40);
-
-        // border for modern button
-        dashboardNavButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 2));
-        inventoryNavButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 14));
-        historyNavButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 32));
-        accountNavButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 23));
-        aboutNavButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 39));
-
-        // add components to panel
-        panelNavigation.add(dashboardNavButton);
-        panelNavigation.add(inventoryNavButton);
-        panelNavigation.add(historyNavButton);
-        panelNavigation.add(accountNavButton);
-        panelNavigation.add(aboutNavButton);
-
-        // add action listeners to navigation buttons
-        dashboardNavButton.addActionListener(this);
-        inventoryNavButton.addActionListener(this);
-        historyNavButton.addActionListener(this);
-        accountNavButton.addActionListener(this);
-        aboutNavButton.addActionListener(this);
-
-        panelNavigation.setVisible(false);
+        // BUTTONS: navigation buttons (Using your createNavButton method)
+        dashboardNavButton = createNavButton("Dashboard", 80, 2);
+        inventoryNavButton = createNavButton("Inventory", 120, 14);
+        historyNavButton = createNavButton("History", 160, 32);
+        accountNavButton = createNavButton("Account", 200, 23);
+        aboutNavButton = createNavButton("About", 240, 39);
     }
     
+    private JButton createNavButton(String text, int yPosition, int rightMargin) {
+        // set button properties
+        JButton button = new JButton(text);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFont(new Font("Poppins", Font.BOLD, 17)); 
+        button.setAlignmentX(Component.CENTER_ALIGNMENT); 
+        button.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        button.setForeground(textColor); 
+
+        // position the button based on y-position and right margin
+        button.setBounds(0, yPosition, 180, 40); // yPosition dynamically set
+        button.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, rightMargin));
+        
+        // add to navigation panel and action listener then return
+        button.addActionListener(this);
+        panelNavigation.add(button);
+        return button;
+    }
+
+
     
-    
+
     public void initializeHeaderPanel() {
-        // header panel properties
+        // PANEL: header
         panelHeader = new JPanel();
         panelHeader.setLayout(null);
         panelHeader.setBackground(new Color(230, 230, 230));
         panelHeader.setBounds(WIDTH / 5, 0, WIDTH - (WIDTH / 5), 50);
         
-        // initialize components
+        // LABEL: company name
         companyName = new JLabel("Bagtas Retail Company Ltd.");
         companyName.setFont(new Font("Poppins", Font.PLAIN, 18));
         companyName.setForeground(Color.GRAY);
         companyName.setHorizontalAlignment(SwingConstants.CENTER);
         companyName.setBounds(0, 0, 720, 50);
         panelHeader.add(companyName);
-        
-        panelHeader.setVisible(false);
     }
+    
     
     
     
@@ -450,8 +448,6 @@ public class Main implements ActionListener, ListSelectionListener {
         panelDashboard.add(inStockPanel);
         panelDashboard.add(profitChartPanel);
         panelDashboard.add(pieChartPanel);
-        
-        panelDashboard.setVisible(false);
     }
     
     
@@ -565,6 +561,7 @@ public class Main implements ActionListener, ListSelectionListener {
     
     
     
+    
     public void _initializeInventoryTable() {
         // table panel properties
         String[] headers = {"Products", "Category", "Cost", "Price", "Quantity"};
@@ -609,9 +606,8 @@ public class Main implements ActionListener, ListSelectionListener {
         panelInventory.add(labelHeaderTable);
         panelInventory.add(tablePanel);
         panelInventory.add(detailPanel);
-        
-        panelInventory.setVisible(false);
     }
+    
     
     
     
@@ -660,9 +656,6 @@ public class Main implements ActionListener, ListSelectionListener {
         historyTablePanel.add(scrollPane);
         historyTablePanel.setBackground(new Color(101, 133, 135));
         historyTablePanel.setBorder(new LineBorder(new Color(101, 133, 135), 2));
-        
-        panelHistory.setVisible(false);
-        
     }
 
     
@@ -721,9 +714,6 @@ public class Main implements ActionListener, ListSelectionListener {
         JLabel bgHandle = new JLabel(background);
         bgHandle.setBounds(0, 0, 720, 550);
         panelAccount.add(bgHandle);
-        
-        
-        
     }
     
     
@@ -1088,21 +1078,7 @@ public class Main implements ActionListener, ListSelectionListener {
             }
         }
     }
-    
-    
-    
-    private JButton createModernButton(String text) {
-        JButton button = new JButton(text);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setFont(new Font("Poppins", Font.BOLD, 17));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding for spacing
-        button.setForeground(textColor);
-        button.addActionListener(this); // Add action listener to handle button clicks
-        return button;
-    }
+
     
     
     
