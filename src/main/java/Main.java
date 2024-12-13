@@ -623,9 +623,7 @@ public class Main implements ActionListener, ListSelectionListener {
         createInventoryTable();   
     }
     
-    
-    
-    
+
     public void createInventoryTable() {
         // TABLE: inventory
         String[] headers = {"Products", "Category", "Cost", "Price", "Quantity"};
@@ -769,6 +767,8 @@ public class Main implements ActionListener, ListSelectionListener {
         panelAccount.add(bgHandle);
     }
     
+
+
     
     
     public void initializeAboutPanel() {
