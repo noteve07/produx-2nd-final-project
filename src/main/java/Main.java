@@ -1,5 +1,5 @@
 /**
- * PRODUX: AN ADT-DRIVEN BUSINESS INVENTORY MANAGEMENT SYSTEM
+ * PRODUX: A BUSINESS INVENTORY MANAGEMENT SYSTEM
  * 
  * @author Barata, Nicko James E.
  * @author Bagtas, Miguel Grant V.
@@ -8,7 +8,7 @@
  * CTCC-0323
  *
  */
-// Nicko kita mo to panis ka na naman boii programmer na ko 
+
 
 import java.util.*;
 import javax.swing.*;
@@ -59,33 +59,59 @@ public class Main implements ActionListener, ListSelectionListener {
     
     // declare dashboard components
     private JPanel panelDashboard;
+    private JPanel panelProductSold;
+    private JPanel panelRevenue;
+    private JPanel panelInStock;
+    private JPanel panelProfitChart;
+    private JPanel panelPieChart;
+    private JLabel labelProductSold;
+    private JLabel labelRevenue;
+    private JLabel labelInStock;
     private JLabel labelProductSoldValue;
     private JLabel labelRevenueValue;
-    private JLabel labelInStockValue;
+    private JLabel labelInStockValue;    
+    private BarGraphPanel profitGraph;
+    private PieChartPanel pieGraph;
+    
     private int numSoldProducts = 832;
     private double revenue = 7450.49;
     private int inStock = 2671;
     
     // declare inventory components
     private JPanel panelInventory;
-    private JPanel tablePanel, detailPanel;
-    private JLabel labelHeaderTable, labelDetailProduct, labelDetailCategory;
-    private JLabel labelDetailCost, labelDetailPrice, labelDetailQuantity;
-    private JTextField fieldHeaderTable, fieldDetailProduct, fieldDetailCategory;
-    private JTextField fieldDetailCost, fieldDetailPrice, fieldDetailQuantity;
-    private JButton addButton, soldButton, updateButton, deleteButton;
+    private JPanel panelInventoryTable;
+    private JPanel panelDetails;
+    private JLabel labelHeaderTable; 
+    private JLabel labelDetails;
+    private JLabel labelDetailProduct; 
+    private JLabel labelDetailCategory;
+    private JLabel labelDetailCost; 
+    private JLabel labelDetailPrice;
+    private JLabel labelDetailQuantity;
+    private JTextField fieldDetailProduct; 
+    private JTextField fieldDetailCategory;
+    private JTextField fieldDetailCost; 
+    private JTextField fieldDetailPrice; 
+    private JTextField fieldDetailQuantity;
+    private JButton buttonAdd;
+    private JButton buttonSold;
+    private JButton buttonUpdate;
+    private JButton buttonDelete;
     private JTable productTable;
     private DefaultTableModel tableModel;
     
     // declare history components
     private JPanel panelHistory;
-    private JPanel historyTablePanel;
-    private JLabel labelHistoryHeader;
+    private JPanel panelHistoryTable;
     private JTable historyTable;
     private DefaultTableModel historyTableModel;
     
     // declare account panel
     private JPanel panelAccount;
+    private JLabel labelCompanyName;
+    private JLabel labelCompanyAddress;
+    private JLabel labelCompanyContacts;
+    private JLabel labelCompanyEmail;
     
     // declare about panel
     private JPanel panelAbout;
@@ -104,6 +130,7 @@ public class Main implements ActionListener, ListSelectionListener {
     private final Color highlightColor = new Color(200, 200, 200); // Lighter color for highlight
     private final Color loginPanelBgColor = new Color(54, 69, 77);
     private final Color textColor = new Color(228, 239, 240);
+    private final Color cardColor = new Color(250, 255, 253);
 
     // other properties
     private final int WIDTH = 900;
@@ -299,6 +326,7 @@ public class Main implements ActionListener, ListSelectionListener {
         aboutNavButton = createNavButton("About", 240, 39);
     }
     
+    
     private JButton createNavButton(String text, int yPosition, int rightMargin) {
         // set button properties
         JButton button = new JButton(text);
@@ -322,6 +350,7 @@ public class Main implements ActionListener, ListSelectionListener {
 
 
     
+    
 
     public void initializeHeaderPanel() {
         // PANEL: header
@@ -342,228 +371,263 @@ public class Main implements ActionListener, ListSelectionListener {
     
     
     
+    
     public void initializeDashboardPanel() {
-        // dashboard panel properties
+        // PANEL: dashboard
         panelDashboard = new JPanel();
         panelDashboard.setLayout(null);
         panelDashboard.setBackground(new Color(209, 222, 222));
         panelDashboard.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);
         panelDashboard.setVisible(false);
         
-        // three dashboard card and two visualizations
-        JPanel productSoldPanel = new JPanel();
-        JPanel revenuePanel = new JPanel();
-        JPanel inStockPanel = new JPanel();
-        JPanel profitChartPanel = new JPanel();
-        JPanel pieChartPanel = new JPanel();
+        // PANEL: product sold
+        panelProductSold = new JPanel();
+        panelProductSold.setLayout(null);
+        panelProductSold.setBackground(cardColor);
+        panelProductSold.setBackground(new Color(168, 96, 219, 200));
+        panelProductSold.setBounds(65, 75, 150, 100);
+        panelDashboard.add(panelProductSold);
         
-        // set color for each panel outline layout
-        Color cardColor = new Color(250, 255, 253);
-        productSoldPanel.setBackground(cardColor);
-        revenuePanel.setBackground(cardColor);
-        inStockPanel.setBackground(cardColor);
-        profitChartPanel.setBackground(cardColor);
-        pieChartPanel.setBackground(cardColor);
-        
-        // setBounds for each panel position and size
-        productSoldPanel.setBounds(65, 75, 150, 100);
-        revenuePanel.setBounds(275, 75, 150, 100);
-        inStockPanel.setBounds(485, 75, 150, 100);
-        profitChartPanel.setBounds(65, 225, 250, 200);
-        pieChartPanel.setBounds(385, 225, 250, 200);
-        
-        // set colors
-        productSoldPanel.setBackground(new Color(168, 96, 219, 200));
-        revenuePanel.setBackground(new Color(96, 219, 116, 200));
-        inStockPanel.setBackground(new Color(90, 166, 242, 200));
-        
-        // set layout to null
-        productSoldPanel.setLayout(null);
-        revenuePanel.setLayout(null);
-        inStockPanel.setLayout(null);
-        
-        // product sold panel card
-        JLabel labelProductSold = new JLabel("Product Sold");
-        labelProductSoldValue = new JLabel(String.valueOf(numSoldProducts));
+        // LABEL: product sold
+        labelProductSold = new JLabel("Product Sold");
+        labelProductSold.setFont(new Font("Poppins", Font.BOLD, 20));        
+        labelProductSold.setHorizontalAlignment(SwingConstants.CENTER);
         labelProductSold.setForeground(textColor);
         labelProductSold.setBackground(new Color(168, 96, 219, 250));
         labelProductSold.setOpaque(true);
-        labelProductSoldValue.setForeground(textColor);
-        labelProductSold.setFont(new Font("Poppins", Font.BOLD, 20));
-        labelProductSoldValue.setFont(new Font("Poppins", Font.BOLD, 32));
-        labelProductSold.setHorizontalAlignment(SwingConstants.CENTER);
-        labelProductSoldValue.setHorizontalAlignment(SwingConstants.CENTER);
         labelProductSold.setBounds(0, 0, 150, 40);
-        labelProductSoldValue.setBounds(0, 47, 150, 40);
-        productSoldPanel.add(labelProductSold);
-        productSoldPanel.add(labelProductSoldValue);
+        panelProductSold.add(labelProductSold);
         
-        // revenue panel card
-        JLabel labelRevenue = new JLabel("Revenue");
-        labelRevenueValue = new JLabel("$"+String.valueOf(revenue));
+        // LABEL: ProductSold (Value)
+        labelProductSoldValue = new JLabel(String.valueOf(numSoldProducts));
+        labelProductSoldValue.setFont(new Font("Poppins", Font.BOLD, 32));
+        labelProductSoldValue.setHorizontalAlignment(SwingConstants.CENTER);
+        labelProductSoldValue.setForeground(textColor);
+        labelProductSoldValue.setBounds(0, 47, 150, 40);
+        panelProductSold.add(labelProductSoldValue);
+        
+        
+        // PANEL: revenue
+        panelRevenue = new JPanel();
+        panelRevenue.setLayout(null);
+        panelRevenue.setBackground(cardColor);
+        panelRevenue.setBackground(new Color(96, 219, 116, 200));
+        panelRevenue.setBounds(275, 75, 150, 100);
+        panelDashboard.add(panelRevenue);
+        
+        // LABEL: revenue
+        labelRevenue = new JLabel("Revenue");
+        labelRevenue.setFont(new Font("Poppins", Font.BOLD, 20));
+        labelRevenue.setHorizontalAlignment(SwingConstants.CENTER);
         labelRevenue.setForeground(textColor);
         labelRevenue.setBackground(new Color(96, 219, 116, 250));
         labelRevenue.setOpaque(true);
-        labelRevenueValue.setForeground(textColor);
-        labelRevenue.setFont(new Font("Poppins", Font.BOLD, 20));
-        labelRevenueValue.setFont(new Font("Poppins", Font.BOLD, 32));
-        labelRevenue.setHorizontalAlignment(SwingConstants.CENTER);
-        labelRevenueValue.setHorizontalAlignment(SwingConstants.CENTER);
         labelRevenue.setBounds(0, 0, 150, 40);
-        labelRevenueValue.setBounds(0, 47, 150, 40);
-        revenuePanel.add(labelRevenue);
-        revenuePanel.add(labelRevenueValue);
+        panelRevenue.add(labelRevenue);
         
-        // inStock panel card
-        JLabel labelInStock = new JLabel("In-Stock");
-        labelInStockValue = new JLabel(String.valueOf(inStock));
+        // LABEL: revenue (value)
+        labelRevenueValue = new JLabel("$"+String.valueOf(revenue));
+        labelRevenueValue.setFont(new Font("Poppins", Font.BOLD, 32));
+        labelRevenueValue.setHorizontalAlignment(SwingConstants.CENTER);
+        labelRevenueValue.setForeground(textColor);
+        labelRevenueValue.setBounds(0, 47, 150, 40);
+        panelRevenue.add(labelRevenueValue);
+        
+        
+        // PANEL: in-stock
+        panelInStock = new JPanel();
+        panelInStock.setLayout(null);
+        panelInStock.setBackground(cardColor);
+        panelInStock.setBackground(new Color(90, 166, 242, 200));
+        panelInStock.setBounds(485, 75, 150, 100);
+        panelDashboard.add(panelInStock);
+        
+        // LABEL: in-stock
+        labelInStock = new JLabel("In-Stock");
+        labelInStock.setFont(new Font("Poppins", Font.BOLD, 20));
+        labelInStock.setHorizontalAlignment(SwingConstants.CENTER);
         labelInStock.setForeground(textColor);
         labelInStock.setBackground(new Color(90, 166, 242, 250));
         labelInStock.setOpaque(true);
+        labelInStock.setBounds(0, 0, 150, 40);        
+        panelInStock.add(labelInStock);
+        
+        // LABEL: in-stock (value)
+        labelInStockValue = new JLabel(String.valueOf(inStock));
         labelInStockValue.setForeground(textColor);
-        labelInStock.setFont(new Font("Poppins", Font.BOLD, 20));
         labelInStockValue.setFont(new Font("Poppins", Font.BOLD, 32));
-        labelInStock.setHorizontalAlignment(SwingConstants.CENTER);
         labelInStockValue.setHorizontalAlignment(SwingConstants.CENTER);
-        labelInStock.setBounds(0, 0, 150, 40);
         labelInStockValue.setBounds(0, 47, 150, 40);
-        inStockPanel.add(labelInStock);
-        inStockPanel.add(labelInStockValue);
+        panelInStock.add(labelInStockValue);
         
-        // profitChartPanel
-        BarGraphPanel profitGraph = new BarGraphPanel();
+        
+        // PANEL: profit chart
+        panelProfitChart = new JPanel();
+        panelProfitChart.setBackground(cardColor);
+        panelProfitChart.setBounds(65, 225, 250, 200);
+        panelDashboard.add(panelProfitChart);
+        
+        // GRAPHICS: profit chart
+        profitGraph = new BarGraphPanel();
+        panelProfitChart.setBackground(new Color(101, 133, 135));
         profitGraph.setBounds(0, 0, 250, 200);
-        profitChartPanel.setBackground(new Color(101, 133, 135));
-        profitChartPanel.add(profitGraph);
+        panelProfitChart.add(profitGraph);
+
         
-        // pieChartPanel
-        PieChartPanel pieGraph = new PieChartPanel();
-        pieGraph.setBounds(0, 0, 250, 200);
-        pieChartPanel.setBackground(new Color(101, 133, 135));
-        pieChartPanel.add(pieGraph);
+        // PANEL: pie chart
+        panelPieChart = new JPanel();
+        panelPieChart.setBackground(cardColor);
+        panelPieChart.setBounds(385, 225, 250, 200);
+        panelDashboard.add(panelPieChart);
         
-        // add to panelDashboard
-        panelDashboard.add(productSoldPanel);
-        panelDashboard.add(revenuePanel);
-        panelDashboard.add(inStockPanel);
-        panelDashboard.add(profitChartPanel);
-        panelDashboard.add(pieChartPanel);
+        // GRAPHICS: pie chart
+        pieGraph = new PieChartPanel();
+        panelPieChart.setBackground(new Color(101, 133, 135));
+        pieGraph.setBounds(0, 0, 250, 200);        
+        panelPieChart.add(pieGraph);        
     }
     
     
     
+    
+    
     public void initializeInventoryPanel() {
-        // inventory panel properties
+        // PANEL: inventory
         panelInventory = new JPanel();
         panelInventory.setLayout(null);
         panelInventory.setBackground(new Color(209, 222, 222));
         panelInventory.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);
         panelInventory.setVisible(false);
         
-        // initialize panels and components
-        tablePanel = new JPanel();
-        detailPanel = new JPanel();
+        // HEADER: product inventory
         labelHeaderTable = new JLabel("PRODUCT INVENTORY");
-        addButton = new JButton("ADD");
-        soldButton = new JButton("SOLD");                
-        updateButton = new JButton("UPDATE");
-        deleteButton = new JButton("DELETE");
-        
-        // setBounds for each panel positions and size
-        tablePanel.setBounds(50, 125, 350, 350);
-        detailPanel.setBounds(425, 125, 225, 275);
-        labelHeaderTable.setBounds(50, 60, 300, 50);
-        addButton.setBounds(435, 415, 80, 40);
-        soldButton.setBounds(560, 415, 80, 40);
-        updateButton.setBounds(25, 200, 87, 30);
-        deleteButton.setBounds(112, 200, 88, 30);
-
-        // constumize buttons
-        addButton.setFocusPainted(false);
-        soldButton.setFocusPainted(false);
-        addButton.setBorderPainted(false);
-        soldButton.setBorderPainted(false);
-        addButton.setForeground(textColor);
-        addButton.setBackground(selectedButtonColor);
-        soldButton.setForeground(textColor);
-        soldButton.setBackground(defaultButtonColor);
-
-        // table header
         labelHeaderTable.setForeground(new Color(15, 34, 51));
         labelHeaderTable.setFont(new Font("Poppins", Font.BOLD, 18));
         labelHeaderTable.setHorizontalAlignment(SwingConstants.LEFT);
+        labelHeaderTable.setBounds(50, 60, 300, 50);
+        panelInventory.add(labelHeaderTable);
         
-        // detail Panel
-        detailPanel.setLayout(null);
-        JLabel labelDetails = new JLabel("Product");
+        
+        // PANEL: product details
+        panelDetails = new JPanel();
+        panelDetails.setBounds(425, 125, 225, 275);
+        panelDetails.setLayout(null);
+        panelInventory.add(panelDetails);
+        
+        // LABEL: product
+        labelDetails = new JLabel("Product");
         labelDetails.setBounds(0, 0, 225, 40);
         labelDetails.setFont(new Font("Poppins", Font.BOLD, 20));
         labelDetails.setHorizontalAlignment(SwingConstants.CENTER);
-        detailPanel.add(labelDetails);
+        panelDetails.add(labelDetails);
         
-        // labels for detail panel
+        
+        // LABEL-FIELD: product
         labelDetailProduct = new JLabel("Product:");
-        labelDetailCategory = new JLabel("Category:");
-        labelDetailCost = new JLabel("Cost:");
-        labelDetailPrice = new JLabel("Price:");
-        labelDetailQuantity = new JLabel("Quantity:");
-
-        // text fields for detail panel
-        fieldDetailProduct = new JTextField();
-        fieldDetailCategory = new JTextField();
-        fieldDetailCost = new JTextField();
-        fieldDetailPrice = new JTextField();
-        fieldDetailQuantity = new JTextField();
-        
-        // set bounds
-        labelDetailProduct.setBounds(25, 50, 75, 20);
-        labelDetailCategory.setBounds(25, 80, 75, 20);
-        labelDetailCost.setBounds(25, 110, 75, 20);
-        labelDetailPrice.setBounds(25, 140, 75, 20);
-        labelDetailQuantity.setBounds(25, 170, 75, 20);
-        
-        // set bounds
-        fieldDetailProduct.setBounds(100, 50, 100, 20);
-        fieldDetailCategory.setBounds(100, 80, 100, 20);
-        fieldDetailCost.setBounds(100, 110, 100, 20);
-        fieldDetailPrice.setBounds(100, 140, 100, 20);
-        fieldDetailQuantity.setBounds(100, 170, 100, 20);
-        
-        // set color and fonts
-        detailPanel.setBackground(new Color(190, 205, 207));
         labelDetailProduct.setFont(new Font("Poppins", Font.BOLD, 14));
-        labelDetailCategory.setFont(new Font("Poppins", Font.BOLD, 14));
-        labelDetailCost.setFont(new Font("Poppins", Font.BOLD, 14));
-        labelDetailPrice.setFont(new Font("Poppins", Font.BOLD, 14));
-        labelDetailQuantity.setFont(new Font("Poppins", Font.BOLD, 14));
-        
         labelDetailProduct.setForeground(new Color(71, 71, 71));
+        labelDetailProduct.setBounds(25, 50, 75, 20);
+
+        fieldDetailProduct = new JTextField();
+        fieldDetailProduct.setBounds(100, 50, 100, 20);
+        panelDetails.add(labelDetailProduct);
+        panelDetails.add(fieldDetailProduct);
+
+        
+        // LABEL-FIELD: category
+        labelDetailCategory = new JLabel("Category:");
+        labelDetailCategory.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailCategory.setForeground(new Color(71, 71, 71));
+        labelDetailCategory.setBounds(25, 80, 75, 20);
+
+        fieldDetailCategory = new JTextField();
+        fieldDetailCategory.setBounds(100, 80, 100, 20);
+        panelDetails.add(labelDetailCategory);
+        panelDetails.add(fieldDetailCategory);
+        
+
+        // LABEL-FIELD: cost
+        labelDetailCost = new JLabel("Cost:");
+        labelDetailCost.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailCost.setForeground(new Color(71, 71, 71));
+        labelDetailCost.setBounds(25, 110, 75, 20);
+
+        fieldDetailCost = new JTextField();
+        fieldDetailCost.setBounds(100, 110, 100, 20);
+        panelDetails.add(labelDetailCost);
+        panelDetails.add(fieldDetailCost);
+        
+
+        // LABEL-FIELD: price
+        labelDetailPrice = new JLabel("Price:");
+        labelDetailPrice.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailPrice.setForeground(new Color(71, 71, 71));
+        labelDetailPrice.setBounds(25, 140, 75, 20);
+
+        fieldDetailPrice = new JTextField();
+        fieldDetailPrice.setBounds(100, 140, 100, 20);
+        panelDetails.add(labelDetailPrice);
+        panelDetails.add(fieldDetailPrice);
+        
+
+        // LABEL-FIELD: quantity
+        labelDetailQuantity = new JLabel("Quantity:");
+        labelDetailQuantity.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailQuantity.setForeground(new Color(71, 71, 71));
+        labelDetailQuantity.setBounds(25, 170, 75, 20);
+
+        fieldDetailQuantity = new JTextField();
+        fieldDetailQuantity.setBounds(100, 170, 100, 20);
+        panelDetails.add(labelDetailQuantity);
+        panelDetails.add(fieldDetailQuantity);
         
-        // add components to detail panel
-        detailPanel.add(labelDetailProduct);
-        detailPanel.add(labelDetailCategory);
-        detailPanel.add(labelDetailCost);
-        detailPanel.add(labelDetailPrice);
-        detailPanel.add(labelDetailQuantity);
-        detailPanel.add(fieldDetailProduct);
-        detailPanel.add(fieldDetailCategory);
-        detailPanel.add(fieldDetailCost);
-        detailPanel.add(fieldDetailPrice);
-        detailPanel.add(fieldDetailQuantity);
         
-        // helper method for refactoring
-        _initializeInventoryTable();   
+        // BUTTON: add
+        buttonAdd = new JButton("ADD");
+        buttonAdd.setForeground(textColor);
+        buttonAdd.setBackground(selectedButtonColor);
+        buttonAdd.setFocusPainted(false);
+        buttonAdd.setBorderPainted(false);
+        buttonAdd.setBounds(435, 415, 80, 40);
+        buttonAdd.addActionListener(this);
+        panelInventory.add( buttonAdd);
+        
+        // BUTTON: sold
+        buttonSold = new JButton("SOLD");        
+        buttonSold.setForeground(textColor);
+        buttonSold.setBackground(defaultButtonColor);
+        buttonSold.setFocusPainted(false);
+        buttonSold.setBorderPainted(false);    
+        buttonSold.setBounds(560, 415, 80, 40);
+        buttonSold.addActionListener(this);
+        panelInventory.add( buttonSold);
+
+        // BUTTON: update
+        buttonUpdate = new JButton("UPDATE");
+        buttonUpdate.setBounds(25, 200, 87, 30);
+        buttonUpdate.addActionListener(this);
+        panelDetails.add(buttonUpdate);
+        
+        // BUTTON: delete
+        buttonDelete = new JButton("DELETE");
+        buttonDelete.setBounds(112, 200, 88, 30);
+        buttonDelete.addActionListener(this);
+        panelDetails.add(buttonDelete);
+        
+        
+        // PANEL: inventory table
+        panelInventoryTable = new JPanel();
+        panelInventoryTable.setBounds(50, 125, 350, 350);
+        panelInventory.add(panelInventoryTable);
+       
+        createInventoryTable();   
     }
     
     
     
     
-    public void _initializeInventoryTable() {
-        // table panel properties
+    public void createInventoryTable() {
+        // TABLE: inventory
         String[] headers = {"Products", "Category", "Cost", "Price", "Quantity"};
         tableModel = new DefaultTableModel(headers, 0);
         productTable = new JTable(tableModel);
@@ -588,50 +652,36 @@ public class Main implements ActionListener, ListSelectionListener {
         // inventory table dimensions
         JScrollPane scrollPane = new JScrollPane(productTable);
         scrollPane.setPreferredSize(new Dimension(350, 350));
-        tablePanel.add(scrollPane);
-        tablePanel.setBackground(new Color(101, 133, 135));
-        tablePanel.setBorder(new LineBorder(new Color(101, 133, 135), 2));                   
-        
-        // add action listener to each event
-        addButton.addActionListener(this);
-        soldButton.addActionListener(this);
-        updateButton.addActionListener(this);
-        deleteButton.addActionListener(this);
-        
-        // add components to panelInventory
-        panelInventory.add( addButton);
-        panelInventory.add( soldButton);
-        detailPanel.add(updateButton);
-        detailPanel.add(deleteButton);
-        panelInventory.add(labelHeaderTable);
-        panelInventory.add(tablePanel);
-        panelInventory.add(detailPanel);
+        panelInventoryTable.add(scrollPane);
+        panelInventoryTable.setBackground(new Color(101, 133, 135));
+        panelInventoryTable.setBorder(new LineBorder(new Color(101, 133, 135), 2));                   
     }
     
     
     
     
+    
     public void initializeHistoryPanel() {
-        // history panel properties
+        // PANEL: history
         panelHistory = new JPanel();
         panelHistory.setLayout(null);
         panelHistory.setBackground(new Color(209, 222, 222));
-        panelHistory.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);
-        panelHistory.setVisible(false);        
+        panelHistory.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);  
         
-        // history table panel
-        historyTablePanel = new JPanel();
-        historyTablePanel.setBounds(50, 50, 620, 400);
-        panelHistory.add(historyTablePanel);
+        // PANEL: hstory table
+        panelHistoryTable = new JPanel();
+        panelHistoryTable.setBounds(50, 50, 620, 400);
+        panelHistoryTable.add(panelHistoryTable);
+    }
+    
+    
+    public void createHistoryTable() {
+        // TABLE: history
         
         // history table properties
         String[] headers = {"Action", "Products", "Category", "Cost", "Price", "Quantity"};
         historyTableModel = new DefaultTableModel(headers, 0);
         historyTable = new JTable(historyTableModel);
-//        historyTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-//        historyTable.setFillsViewportHeight(true);
-//        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
-//        historyTable.setRowSorter(sorter);
         
         // history table costumization, not selectable and editable
         historyTable.getTableHeader().setReorderingAllowed(false);
@@ -653,51 +703,54 @@ public class Main implements ActionListener, ListSelectionListener {
         JScrollPane scrollPane = new JScrollPane(historyTable);
         scrollPane.setBounds(50, 50, 620, 40);
         scrollPane.setPreferredSize(new Dimension(620, 400));
-        historyTablePanel.add(scrollPane);
-        historyTablePanel.setBackground(new Color(101, 133, 135));
-        historyTablePanel.setBorder(new LineBorder(new Color(101, 133, 135), 2));
+        panelHistoryTable.add(scrollPane);
+        panelHistoryTable.setBackground(new Color(101, 133, 135));
+        panelHistoryTable.setBorder(new LineBorder(new Color(101, 133, 135), 2));
     }
 
     
     
+    
+    
     public void initializeAccountPanel() {
+        // PANEL: account
         panelAccount = new JPanel();
         panelAccount.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);
         panelAccount.setLayout(null);
         
-        // company information name
-        JLabel labelCompanyName = new JLabel("Bagtas Retail Company Ltd.");
+        // LABEL: company name
+        labelCompanyName = new JLabel("Bagtas Retail Company Ltd.");
         labelCompanyName.setBounds(200, 150, 300, 60);
         labelCompanyName.setFont(new Font("Poppins", Font.BOLD, 18));
         labelCompanyName.setForeground(new Color(71, 71, 71));
         labelCompanyName.setHorizontalAlignment(SwingConstants.CENTER);
         panelAccount.add(labelCompanyName);
         
-        // company information address
-        JLabel labelCompanyAddress = new JLabel("123, J.P. Rizal St., Abucay, Bataan");
+        // LABEL: company address
+        labelCompanyAddress = new JLabel("123, J.P. Rizal St., Abucay, Bataan");
         labelCompanyAddress.setBounds(200, 190, 300, 60);
         labelCompanyAddress.setFont(new Font("Poppins", Font.BOLD, 18));
         labelCompanyAddress.setForeground(new Color(71, 71, 71));
         labelCompanyAddress.setHorizontalAlignment(SwingConstants.CENTER);
         panelAccount.add(labelCompanyAddress);
         
-        // company information contact no.
-        JLabel labelCompanyContacts = new JLabel("0909 123 4567");
+        // LABEL: company contacts
+        labelCompanyContacts = new JLabel("0909 123 4567");
         labelCompanyContacts.setBounds(200, 230, 300, 60);
         labelCompanyContacts.setFont(new Font("Poppins", Font.BOLD, 18));
         labelCompanyContacts.setForeground(new Color(71, 71, 71));
         labelCompanyContacts.setHorizontalAlignment(SwingConstants.CENTER);
         panelAccount.add(labelCompanyContacts);
         
-        // company information contact no.
-        JLabel labelCompanyEmail = new JLabel("bagtas1024@company.com");
+        // LABEL: company email
+        labelCompanyEmail = new JLabel("bagtas1024@company.com");
         labelCompanyEmail.setBounds(200, 270, 300, 60);
         labelCompanyEmail.setFont(new Font("Poppins", Font.BOLD, 18));
         labelCompanyEmail.setForeground(new Color(71, 71, 71));
         labelCompanyEmail.setHorizontalAlignment(SwingConstants.CENTER);
         panelAccount.add(labelCompanyEmail);
         
-        // profile icon
+        // ICON: profile
         ImageIcon profImageFile = new ImageIcon(getClass().getResource("images/bagtas_profile.png"));
         Image profImage = profImageFile.getImage();
         Image scaledImg = profImage.getScaledInstance(60, 60, Image.SCALE_SMOOTH);
@@ -706,7 +759,7 @@ public class Main implements ActionListener, ListSelectionListener {
         profHandle.setBounds(330, 50, 60, 60);
         panelAccount.add(profHandle);
         
-        // background image
+        // IMAGE: account background
         ImageIcon bgImageFile = new ImageIcon(getClass().getResource("images/account_background.jpg"));
         Image bgImage = bgImageFile.getImage();
         Image scaledImage = bgImage.getScaledInstance(720, 550, Image.SCALE_SMOOTH);
@@ -719,7 +772,7 @@ public class Main implements ActionListener, ListSelectionListener {
     
     
     public void initializeAboutPanel() {
-        // PANEL: About
+        // PANEL: about
         panelAbout = new JPanel();
         panelAbout.add(new JLabel("About Content"));
     }
@@ -1139,13 +1192,13 @@ public class Main implements ActionListener, ListSelectionListener {
             panelAbout.setVisible(false);
             panelAccount.setVisible(true);
             setSelectedNavButton(accountNavButton);
-        } else if (e.getSource() == addButton) {
+        } else if (e.getSource() == buttonAdd) {
             addProduct();
-        } else if (e.getSource() == soldButton) {
+        } else if (e.getSource() == buttonSold) {
             soldProduct();
-        } else if (e.getSource() == updateButton) {
+        } else if (e.getSource() == buttonUpdate) {
             updateProduct();
-        } else if (e.getSource() == deleteButton) {
+        } else if (e.getSource() == buttonDelete) {
             deleteProduct();
         }
     }
