@@ -1,35 +1,548 @@
 /**
- * PRODUX: A BUSINESS INVENTORY MANAGEMENT SYSTEM
  * 
- * @author Barata, Nicko James E.
- * @author Bagtas, Miguel Grant V.
+ *                   CTCC-0513
+ *      DATA STRUCTURES AND ALGORITHM ANALYSIS
  * 
- * BSCS-SD1A 
- * CTCC-0323
- *
+ * 
+ *              GROUP 4 | CASE STUDY
+ * 
+ * 
+ *  PRODUX: AN ADT-DRIVEN INVENTORY MANAGEMENT SYSTEM
+ *       (Stack - Queue - LinkedList - HashMap)
+ * 
+ * 
+ *  LEADER: 
+ *      Barata, Nicko James E.
+ * 
+ *  MEMBERS:
+ *      Amposta, Reinald Luis
+ *      Bagtas, Miguel Grant V.
+ *      Tranate, Jheris V.* 
+ * 
+ * 
+ * 
+ *  DESCRIPTION:
+ *  Produx is an inventory management system built on fundamental
+ *  abstract data types (ADTs) like stacks, queues, linked lists, 
+ *  and hash maps. It is designed to handle inventory  operations 
+ *  efficiently, offering features such as:
+ * 
+ *      - Inventory Tracking | LinkedList
+ *      - Undo/Redo System | Stack
+ *      - Real-Time Profit Monitoring | Queue
+ *      - Dynamic Dashboard Data | HashMap
+ * 
+ *  This project integrates Abstract Data Type structures concepts 
+ *  into real-world functionalities, demonstrating how algorithm 
+ *  analysis and design can solve practical problems effectively.
+ * 
  */
+
 
 
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Arc2D;
 import java.awt.geom.RoundRectangle2D;
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import javax.swing.Timer;
 import javax.swing.border.LineBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
+
+
+
+/*  
+ * Stack.java  
+ *  
+ * A custom stack implementation designed to manage the undo functionality in the application.  
+ * It uses a linked list to efficiently track and retrieve user actions (Action objects)  
+ * for undo operations. This stack also updates the history table, allowing users to  
+ * seamlessly view and revert changes.  
+ */  
+
+class Stack {
+    
+    private static class Node {
+        // node class for the linked list
+        Action action;
+        Node next;
+
+        public Node(Action action) {
+            this.action = action;
+            this.next = null;
+        }
+    }
+
+    // initialize top of stack and capacity
+    private Node top; 
+    private int size;
+
+    public Stack() {
+        // constructor
+        this.top = null;
+        this.size = 0;
+    }
+
+    
+    public void push(Action action) {
+        // push a new action onto the stack
+        Node newNode = new Node(action);
+        newNode.next = top;
+        top = newNode;
+        size++;
+    }
+
+    
+    public Action pop() {
+        // pop the most recent action from the stack
+        if (isEmpty()) {
+            return null;
+        }
+        Action action = top.action;
+        top = top.next;
+        size--;
+        return action;
+    }
+
+    public Action peek() {
+        // peek at the most recent action without removing it
+        return isEmpty() ? null : top.action;
+    }
+
+    public boolean isEmpty() {
+        // check if the stack is empty
+        return top == null;
+    }
+
+    public int getSize() {
+        // get the size of the stack
+        return size;
+    }
+
+    public void clear() {
+        // clear the stack
+        top = null;
+        size = 0;
+    }
+}
 
 
 
 
-public class Main implements ActionListener, ListSelectionListener {
+/*
+ * ProfitQueue.java
+ *
+ * This class implements a queue to store profit values for the last 7 days with a fixed capacity. 
+ * It uses the enqueue operation to add the most recent profit data and automatically removes 
+ * the oldest profit (lagpas 7 days) when the queue reaches its capacity, ensuring that only the 
+ * last 7 days of profit data are retained. This structure is ideal for maintaining a rolling window 
+ * of the most recent profit values while discarding outdated information.
+ */
+
+class ProfitQueue {
+    private Double[] elements;
+    private int front, rear, size, capacity;
+
+    
+    private class ProfitData {
+        double value; 
+        String day;   
+        double net;   
+    }
+    private ProfitData[] profitData;
+
+    public ProfitQueue(int capacity) {
+        this.capacity = capacity;
+        this.elements = new Double[capacity];
+        this.profitData = new ProfitData[capacity]; // Initialize the ProfitData array
+        this.front = 0;
+        this.rear = -1;
+        this.size = 0;
+    }
+
+    public void enqueue(Double profit) {
+        // enqueue most recent profit data
+        if (size == capacity) {
+            dequeue(); // If the queue is full, dequeue the oldest item
+        }
+        rear = (rear + 1) % capacity;
+        elements[rear] = profit;
+
+        // create new profit data
+        ProfitData newData = new ProfitData();
+        newData.value = profit;
+        newData.day = "Day " + (size + 1); // Example: "Day 1", "Day 2" (adjust for real day names)
+        newData.net = size > 0 ? profit - elements[rear - 1 < 0 ? capacity - 1 : rear - 1] : 0;
+        profitData[rear] = newData;
+
+        size++;
+    }
+
+    public Double dequeue() {
+        // dequeue profit data
+        if (size == 0) {
+            throw new IllegalStateException("Queue is empty");
+        }
+        Double profit = elements[front];
+        front = (front + 1) % capacity;
+        size--;
+        return profit;
+    }
+
+    public Double peek(int index) {
+        // peek through a specific profit data
+        if (index >= size) {
+            throw new IndexOutOfBoundsException("Invalid index");
+        }
+        return elements[(front + index) % capacity];
+    }
+
+    public int size() {
+        return size;
+    }
+
+    public double getTotalProfit() {
+        // Existing total profit calculation
+        double total = 0;
+        for (int i = 0; i < size; i++) {
+            total += peek(i);
+        }
+        return total;
+    }
+
+    public ProfitData getCurrentDayProfit() {
+        // get the profit for the current day
+        if (size == 0) {
+            throw new IllegalStateException("Queue is empty");
+        }
+        return profitData[rear];
+    }
+    
+    public double calculateNetIncome() {
+        // calculate the net income from the previous day
+        if (size < 2) {
+            throw new IllegalStateException("Not enough data for net income");
+        }
+        int previousIndex = rear - 1; 
+        double netIncome = profitData[rear].value - profitData[previousIndex].value;
+        return netIncome; 
+
+    }
+
+    public void removeOldProfit() {
+        // remove a profit that is over 7 days
+        if (size > 7) {
+            dequeue(); 
+        }
+    }
+}
+
+
+
+
+
+/*
+ * ProductNode.java
+ *
+ * This class represents a node in a linked list, storing information about a product, including:
+ * - Name, category, cost price, selling price, and quantity.
+ * It also holds a reference to the next node, enabling efficient management of product data in the inventory.
+ */
+
+class ProductNode {
+    private String name;
+    private String category;
+    private double costPrice;
+    private double sellingPrice;
+    private int quantity;
+    ProductNode next;
+
+    public ProductNode(String name, String category, double costPrice, double sellingPrice, int quantity) {
+        this.name = name;
+        this.category = category;
+        this.costPrice = costPrice;
+        this.sellingPrice = sellingPrice;
+        this.quantity = quantity;
+        this.next = null;
+    }
+    
+
+    // Getters
+    public String getName() {
+        return name;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public double getCost() {
+        return costPrice;
+    }
+
+    public double getPrice() {
+        return sellingPrice;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+    
+    
+    // Setters
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setCost(double costPrice) {
+        if (costPrice >= 0) {
+            this.costPrice = costPrice;
+        } else {
+            throw new IllegalArgumentException("Cost price cannot be negative.");
+        }
+    }
+
+    public void setPrice(double sellingPrice) {
+        if (sellingPrice < 0) {
+            throw new IllegalArgumentException("Selling price cannot be negative");
+        }
+        this.sellingPrice = sellingPrice;
+    }
+
+    public void setQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative");
+        }
+        this.quantity = quantity;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        ProductNode that = (ProductNode) obj;
+        return Double.compare(that.costPrice, costPrice) == 0 &&
+               Double.compare(that.sellingPrice, sellingPrice) == 0 &&
+               quantity == that.quantity &&
+               name.equals(that.name) &&
+               category.equals(that.category);
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", costPrice=" + costPrice +
+                ", sellingPrice=" + sellingPrice +
+                ", quantity=" + quantity +
+                '}';
+    }
+}
+    
+
+
+
+/*
+ * ProductLinkedList.java
+ *
+ * This class defines a linked list structure to store ProductNode objects.
+ * It provides an efficient way to manage and manipulate product data in the inventory,
+ * allowing easy additions, deletions, and updates.
+ */
+
+class ProductLinkedList {
+    ProductNode head;
+
+    public void addProduct(ProductNode newProduct) {
+        if (head == null) {
+            // if the list is empty, make newProduct the head
+            head = newProduct;
+        } else {
+            // traverse then add newProduct at the end of the list
+            ProductNode current = head;
+            while (current.next != null) {
+                current = current.next;
+            }
+            current.next = newProduct;
+        }
+    }
+    
+    public ProductNode getProductByName(String name) {
+        // get the name of the product node object
+        ProductNode current = head;
+        while (current != null) {
+            if (current.getName().equals(name)) {
+                return current; 
+            }
+            current = current.next;
+        }
+        // if no product is found
+        return null;  
+    }
+
+
+  
+    public void removeProduct(ProductNode productNode) {
+        if (head == null) return; // empty list
+
+        if (head.equals(productNode)) {
+            head = head.next;
+            return;
+        }
+
+        ProductNode current = head;
+        while (current != null && current.next != null) {
+            if (current.next.equals(productNode)) {
+                current.next = current.next.next;
+                return;
+            }
+            current = current.next;
+        }
+    }
+
+
+    public boolean updateProduct(String name, String newCategory, double newCostPrice, double newSellingPrice, int newQuantity) {
+        ProductNode current = head;
+
+        while (current != null) {
+            if (current.getName().equals(name)) {
+                current.setCategory(newCategory);
+                current.setCost(newCostPrice);
+                current.setPrice(newSellingPrice);
+                current.setQuantity(newQuantity);
+                return true; // Product updated
+            }
+            current = current.next;
+        }
+        return false; // Product not found
+    }
+
+    // Display all products
+    public void displayProducts() {
+        ProductNode current = head;
+
+        if (current == null) {
+            System.out.println("No products in the inventory.");
+            return;
+        }
+
+        while (current != null) {
+            System.out.println(current);
+            current = current.next;
+        }
+    }
+}
+
+
+/*
+ * DashboardHashMap.java
+ *
+ * This class implements a custom HashMap to store and manage key-value pairs for the dashboard data. 
+ * It holds crucial information such as "Products Sold", "Revenue", and "In-Stock" data. The values 
+ * are dynamically updated based on user actions in the application, ensuring real-time reflection of 
+ * changes in the dashboard panel.
+ */
+class DashboardHashMap {
+    private Entry[] table;
+    private int capacity = 6; // Default capacity
+    private int size = 0;
+
+    public DashboardHashMap() {
+        table = new Entry[capacity];
+    }
+
+    private static class Entry {
+        // entry class will store the key-value pair
+        String key;
+        Object value;
+        Entry next; // For handling collisions using chaining
+
+        Entry(String key, Object value) {
+            this.key = key;
+            this.value = value;
+            this.next = null;
+        }
+    }
+
+    private int getIndex(String key) {
+        // hash function to get the index
+        System.out.println(key + ": " + key.hashCode() % capacity);
+        return Math.abs(key.hashCode()) % capacity;
+    }
+    
+    public void put(String key, Object value) {
+        // custom put method
+        int index = getIndex(key);
+        Entry newEntry = new Entry(key, value);
+
+        // if the index is empty, directly place the new entry
+        if (table[index] == null) {
+            table[index] = newEntry;
+        } else {
+            // handle collision using chaining
+            Entry current = table[index];
+            while (current != null) {
+                if (current.key.equals(key)) {
+                    // if the key already exists, update the value
+                    current.value = value;
+                    return;
+                }
+                current = current.next;
+            }
+            // if key does not exist, add the new entry to the chain
+            newEntry.next = table[index];
+            table[index] = newEntry;
+        }
+        size++;
+    }
+
+    public Object get(String key) {
+        // custom get method
+        int index = getIndex(key);
+        Entry current = table[index];
+        
+        while (current != null) {
+            if (current.key.equals(key)) {
+                return current.value;
+            }
+            current = current.next;
+        }
+        return null; // Key not found
+    }
+
+    public int size() {
+        return size;
+    }
+
+    public void printMap() {
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] != null) {
+                Entry current = table[i];
+                while (current != null) {
+                    System.out.println(current.key + ": " + current.value);
+                    current = current.next;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+public class Main implements ActionListener {
     // frame and panel components
     JFrame frame;
     
@@ -73,10 +586,6 @@ public class Main implements ActionListener, ListSelectionListener {
     private BarGraphPanel profitGraph;
     private PieChartPanel pieGraph;
     
-    private int numSoldProducts = 832;
-    private double revenue = 7450.49;
-    private int inStock = 2671;
-    
     // declare inventory components
     private JPanel panelInventory;
     private JPanel panelInventoryTable;
@@ -97,8 +606,10 @@ public class Main implements ActionListener, ListSelectionListener {
     private JButton buttonSold;
     private JButton buttonUpdate;
     private JButton buttonDelete;
-    private JTable productTable;
-    private DefaultTableModel tableModel;
+    private JButton buttonUndo;
+    private JButton buttonRedo;
+    private JTable inventoryTable;
+    private DefaultTableModel inventoryTableModel;
     
     // declare history components
     private JPanel panelHistory;
@@ -112,19 +623,36 @@ public class Main implements ActionListener, ListSelectionListener {
     private JLabel labelCompanyAddress;
     private JLabel labelCompanyContacts;
     private JLabel labelCompanyEmail;
+    private JButton buttonLogOut;
     
     // declare about panel
     private JPanel panelAbout;
     
-    // data: inventory
-    ArrayList<Double> dailyProfitData = new ArrayList<Double>();
-    ArrayList<Product> productList = new ArrayList<Product>();
+    // STACK: history, undo and redo
+    Stack historyStack = new Stack();
+    Stack undoStack = new Stack();
+    Stack redoStack = new Stack();   
+    
+    // QUEUE: Profit Data
+    ProfitQueue profits = new ProfitQueue(7);
+    
+    // LINKED LIST: Product List
+    ProductLinkedList productList = new ProductLinkedList();
+    
+    // HASHMAP: dashboard data
+    DashboardHashMap dashboardData = new DashboardHashMap();
     
     // data: accounts
     HashMap<String, String> accounts = new HashMap<String, String>();
     ArrayList<String> existingAccounts = new ArrayList<String>();
     
+    // data: current user
+    String companyID = "";
+    String password = "";
+    
     // color objects
+    private final Color backgroundColor = new Color(209, 222, 222);
+    private final Color navigationBgColor = new Color(71, 93, 105);
     private final Color defaultButtonColor = new Color(44, 54, 59);
     private final Color selectedButtonColor = new Color(102, 150, 134);
     private final Color highlightColor = new Color(200, 200, 200); // Lighter color for highlight
@@ -134,16 +662,15 @@ public class Main implements ActionListener, ListSelectionListener {
 
     // other properties
     private final int WIDTH = 900;
-    private final int HEIGHT = 600;
+    private final int HEIGHT = 600;    
+    private int hoveredRow = -1; 
     String headerText;
     
     
     
     
     public Main() {
-        // initialize datya and components
-        initializeData();
-        initializeLoginPanel();
+        // initialize data and components
         initializeBackgroundPanel();
         initializeNavigationPanel();
         initializeHeaderPanel();
@@ -152,7 +679,11 @@ public class Main implements ActionListener, ListSelectionListener {
         initializeHistoryPanel();
         initializeAboutPanel();
         initializeAccountPanel();
+        initializeLoginPanel();
         initializeFrame();
+        
+        // bypass login feature for direct demonstration of ADTs
+        initializeDemoMode();
     }
     
     
@@ -164,9 +695,12 @@ public class Main implements ActionListener, ListSelectionListener {
         frame.setSize(WIDTH, HEIGHT);
         frame.setLocation(500, 175);
         frame.setLocationRelativeTo(null);
+        frame.setUndecorated(true);
+        frame.setShape(new RoundRectangle2D.Double(0, 0, WIDTH, HEIGHT, 25, 25));
         frame.setVisible(true);
         frame.setLayout(null);
         frame.setResizable(false);
+        
         frame.setBackground(new Color(0, 0, 0));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -182,11 +716,11 @@ public class Main implements ActionListener, ListSelectionListener {
         frame.add(panelAbout);
         
         // set initial visibility of panels
-        panelBackground.setVisible(true);
-        panelLogin.setVisible(true);
-        panelNavigation.setVisible(false);
-        panelHeader.setVisible(false);
-        panelDashboard.setVisible(false);
+        panelBackground.setVisible(false);
+        panelLogin.setVisible(false);
+        panelNavigation.setVisible(true);
+        panelHeader.setVisible(true);
+        panelDashboard.setVisible(true);
         panelInventory.setVisible(false);
         panelHistory.setVisible(false);
     }
@@ -289,14 +823,20 @@ public class Main implements ActionListener, ListSelectionListener {
         panelBackground = new JPanel();
         panelBackground.setBounds(0, 0, WIDTH, HEIGHT);
         
-        // IMAGE: background image
-        ImageIcon bgImageFile = new ImageIcon("images/background_login.jpg");
-        Image bgImage = bgImageFile.getImage();
-        Image scaledImage = bgImage.getScaledInstance(WIDTH, HEIGHT, Image.SCALE_SMOOTH);
-        ImageIcon background = new ImageIcon(scaledImage);
-        JLabel bgHandle = new JLabel(background);
-        bgHandle.setBounds(0, 0, 900, 600);
-        panelBackground.add(bgHandle);
+        try {
+            // Get the direct URL for the image on Google Drive
+            // URL imageUrl = new URL("https://drive.google.com/uc?id=1QAW7vZKYc7QH6Gf-9TtkaJjpy7EeEGVb");
+            // ImageIcon bgImageFile = new ImageIcon(imageUrl);
+            // Image bgImage = bgImageFile.getImage();
+            // Image scaledImage = bgImage.getScaledInstance(900, 600, Image.SCALE_SMOOTH);
+            // ImageIcon background = new ImageIcon(scaledImage);
+            // JLabel bgHandle = new JLabel(background);
+            // bgHandle.setBounds(0, 0, 900, 600);
+            // panelBackground.add(bgHandle);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     
@@ -307,7 +847,7 @@ public class Main implements ActionListener, ListSelectionListener {
         panelNavigation = new JPanel();
         panelNavigation.setLayout(null);
         panelNavigation.setBounds(0, 0, WIDTH / 5, HEIGHT);
-        panelNavigation.setBackground(new Color(71, 93, 105));
+        panelNavigation.setBackground(navigationBgColor);
 
         // LABEL: app name
         appNameLabel = new JLabel("PRODUX");
@@ -347,6 +887,21 @@ public class Main implements ActionListener, ListSelectionListener {
         panelNavigation.add(button);
         return button;
     }
+    
+    
+    private void setSelectedNavButton(JButton selectedButton) {
+        JButton[] buttons = {dashboardNavButton, inventoryNavButton, historyNavButton, accountNavButton, aboutNavButton};
+        for (JButton button : buttons) {
+            if (button == selectedButton) {
+                button.setForeground(loginPanelBgColor);
+                button.setOpaque(true); 
+                button.setBackground(new Color(137, 179, 167)); 
+            } else {
+                button.setForeground(textColor);
+                button.setOpaque(false);
+            }
+        }
+    }
 
 
     
@@ -360,7 +915,7 @@ public class Main implements ActionListener, ListSelectionListener {
         panelHeader.setBounds(WIDTH / 5, 0, WIDTH - (WIDTH / 5), 50);
         
         // LABEL: company name
-        companyName = new JLabel("Bagtas Retail Company Ltd.");
+        companyName = new JLabel("Global Marketing Retail Company Ltd.");
         companyName.setFont(new Font("Poppins", Font.PLAIN, 18));
         companyName.setForeground(Color.GRAY);
         companyName.setHorizontalAlignment(SwingConstants.CENTER);
@@ -376,7 +931,7 @@ public class Main implements ActionListener, ListSelectionListener {
         // PANEL: dashboard
         panelDashboard = new JPanel();
         panelDashboard.setLayout(null);
-        panelDashboard.setBackground(new Color(209, 222, 222));
+        panelDashboard.setBackground(backgroundColor);
         panelDashboard.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);
         panelDashboard.setVisible(false);
         
@@ -398,8 +953,8 @@ public class Main implements ActionListener, ListSelectionListener {
         labelProductSold.setBounds(0, 0, 150, 40);
         panelProductSold.add(labelProductSold);
         
-        // LABEL: ProductSold (Value)
-        labelProductSoldValue = new JLabel(String.valueOf(numSoldProducts));
+        // LABEL: products sold (Value)
+        labelProductSoldValue = new JLabel(String.valueOf(dashboardData.get("Products Sold")));
         labelProductSoldValue.setFont(new Font("Poppins", Font.BOLD, 32));
         labelProductSoldValue.setHorizontalAlignment(SwingConstants.CENTER);
         labelProductSoldValue.setForeground(textColor);
@@ -426,8 +981,8 @@ public class Main implements ActionListener, ListSelectionListener {
         panelRevenue.add(labelRevenue);
         
         // LABEL: revenue (value)
-        labelRevenueValue = new JLabel("$"+String.valueOf(revenue));
-        labelRevenueValue.setFont(new Font("Poppins", Font.BOLD, 32));
+        labelRevenueValue = new JLabel("$"+String.valueOf(dashboardData.get("Revenue")));
+        labelRevenueValue.setFont(new Font("Poppins", Font.BOLD, 28));
         labelRevenueValue.setHorizontalAlignment(SwingConstants.CENTER);
         labelRevenueValue.setForeground(textColor);
         labelRevenueValue.setBounds(0, 47, 150, 40);
@@ -453,7 +1008,7 @@ public class Main implements ActionListener, ListSelectionListener {
         panelInStock.add(labelInStock);
         
         // LABEL: in-stock (value)
-        labelInStockValue = new JLabel(String.valueOf(inStock));
+        labelInStockValue = new JLabel(String.valueOf(dashboardData.get("In-Stock")));
         labelInStockValue.setForeground(textColor);
         labelInStockValue.setFont(new Font("Poppins", Font.BOLD, 32));
         labelInStockValue.setHorizontalAlignment(SwingConstants.CENTER);
@@ -463,26 +1018,24 @@ public class Main implements ActionListener, ListSelectionListener {
         
         // PANEL: profit chart
         panelProfitChart = new JPanel();
-        panelProfitChart.setBackground(cardColor);
+        panelProfitChart.setBackground(new Color(101, 133, 135));
         panelProfitChart.setBounds(65, 225, 250, 200);
         panelDashboard.add(panelProfitChart);
         
         // GRAPHICS: profit chart
         profitGraph = new BarGraphPanel();
-        panelProfitChart.setBackground(new Color(101, 133, 135));
         profitGraph.setBounds(0, 0, 250, 200);
         panelProfitChart.add(profitGraph);
 
         
         // PANEL: pie chart
         panelPieChart = new JPanel();
-        panelPieChart.setBackground(cardColor);
+        panelPieChart.setBackground(new Color(101, 133, 135));
         panelPieChart.setBounds(385, 225, 250, 200);
         panelDashboard.add(panelPieChart);
         
         // GRAPHICS: pie chart
         pieGraph = new PieChartPanel();
-        panelPieChart.setBackground(new Color(101, 133, 135));
         pieGraph.setBounds(0, 0, 250, 200);        
         panelPieChart.add(pieGraph);        
     }
@@ -495,30 +1048,32 @@ public class Main implements ActionListener, ListSelectionListener {
         // PANEL: inventory
         panelInventory = new JPanel();
         panelInventory.setLayout(null);
-        panelInventory.setBackground(new Color(209, 222, 222));
+        panelInventory.setBackground(backgroundColor);
         panelInventory.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);
         panelInventory.setVisible(false);
         
         // HEADER: product inventory
         labelHeaderTable = new JLabel("PRODUCT INVENTORY");
-        labelHeaderTable.setForeground(new Color(15, 34, 51));
-        labelHeaderTable.setFont(new Font("Poppins", Font.BOLD, 18));
+        labelHeaderTable.setForeground(new Color(60, 60, 60));
+        labelHeaderTable.setFont(new Font("Segeo UI", Font.BOLD, 22));
         labelHeaderTable.setHorizontalAlignment(SwingConstants.LEFT);
-        labelHeaderTable.setBounds(50, 60, 300, 50);
+        labelHeaderTable.setBounds(40, 20, 300, 50);
         panelInventory.add(labelHeaderTable);
         
         
         // PANEL: product details
         panelDetails = new JPanel();
-        panelDetails.setBounds(425, 125, 225, 275);
+        panelDetails.setBorder(new LineBorder(new Color(151, 183, 185), 2));
+        panelDetails.setBounds(450, 125, 225, 275);
         panelDetails.setLayout(null);
         panelInventory.add(panelDetails);
         
-        // LABEL: product
-        labelDetails = new JLabel("Product");
-        labelDetails.setBounds(0, 0, 225, 40);
-        labelDetails.setFont(new Font("Poppins", Font.BOLD, 20));
+        // LABEL: details
+        labelDetails = new JLabel("Details");
+        labelDetails.setForeground(new Color(40, 40, 40));
+        labelDetails.setFont(new Font("Segoe UI", Font.BOLD, 20));
         labelDetails.setHorizontalAlignment(SwingConstants.CENTER);
+        labelDetails.setBounds(0, 5, 225, 40);
         panelDetails.add(labelDetails);
         
         
@@ -526,10 +1081,10 @@ public class Main implements ActionListener, ListSelectionListener {
         labelDetailProduct = new JLabel("Product:");
         labelDetailProduct.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailProduct.setForeground(new Color(71, 71, 71));
-        labelDetailProduct.setBounds(25, 50, 75, 20);
+        labelDetailProduct.setBounds(25, 55, 75, 20);
 
         fieldDetailProduct = new JTextField();
-        fieldDetailProduct.setBounds(100, 50, 100, 20);
+        fieldDetailProduct.setBounds(100, 55, 100, 20);
         panelDetails.add(labelDetailProduct);
         panelDetails.add(fieldDetailProduct);
 
@@ -538,10 +1093,10 @@ public class Main implements ActionListener, ListSelectionListener {
         labelDetailCategory = new JLabel("Category:");
         labelDetailCategory.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailCategory.setForeground(new Color(71, 71, 71));
-        labelDetailCategory.setBounds(25, 80, 75, 20);
+        labelDetailCategory.setBounds(25, 85, 75, 20);
 
         fieldDetailCategory = new JTextField();
-        fieldDetailCategory.setBounds(100, 80, 100, 20);
+        fieldDetailCategory.setBounds(100, 85, 100, 20);
         panelDetails.add(labelDetailCategory);
         panelDetails.add(fieldDetailCategory);
         
@@ -550,10 +1105,10 @@ public class Main implements ActionListener, ListSelectionListener {
         labelDetailCost = new JLabel("Cost:");
         labelDetailCost.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailCost.setForeground(new Color(71, 71, 71));
-        labelDetailCost.setBounds(25, 110, 75, 20);
+        labelDetailCost.setBounds(25, 115, 75, 20);
 
         fieldDetailCost = new JTextField();
-        fieldDetailCost.setBounds(100, 110, 100, 20);
+        fieldDetailCost.setBounds(100, 115, 100, 20);
         panelDetails.add(labelDetailCost);
         panelDetails.add(fieldDetailCost);
         
@@ -562,10 +1117,10 @@ public class Main implements ActionListener, ListSelectionListener {
         labelDetailPrice = new JLabel("Price:");
         labelDetailPrice.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailPrice.setForeground(new Color(71, 71, 71));
-        labelDetailPrice.setBounds(25, 140, 75, 20);
+        labelDetailPrice.setBounds(25, 145, 75, 20);
 
         fieldDetailPrice = new JTextField();
-        fieldDetailPrice.setBounds(100, 140, 100, 20);
+        fieldDetailPrice.setBounds(100, 145, 100, 20);
         panelDetails.add(labelDetailPrice);
         panelDetails.add(fieldDetailPrice);
         
@@ -574,85 +1129,209 @@ public class Main implements ActionListener, ListSelectionListener {
         labelDetailQuantity = new JLabel("Quantity:");
         labelDetailQuantity.setFont(new Font("Poppins", Font.BOLD, 14));
         labelDetailQuantity.setForeground(new Color(71, 71, 71));
-        labelDetailQuantity.setBounds(25, 170, 75, 20);
+        labelDetailQuantity.setBounds(25, 175, 75, 20);
 
         fieldDetailQuantity = new JTextField();
-        fieldDetailQuantity.setBounds(100, 170, 100, 20);
+        fieldDetailQuantity.setBounds(100, 175, 100, 20);
         panelDetails.add(labelDetailQuantity);
         panelDetails.add(fieldDetailQuantity);
         
         
         // BUTTON: add
         buttonAdd = new JButton("ADD");
+        buttonAdd.setFont(new Font("Lato", Font.BOLD, 14));
         buttonAdd.setForeground(textColor);
-        buttonAdd.setBackground(selectedButtonColor);
+        buttonAdd.setBackground(new Color(72, 171, 121));
         buttonAdd.setFocusPainted(false);
         buttonAdd.setBorderPainted(false);
-        buttonAdd.setBounds(435, 415, 80, 40);
+        buttonAdd.setBounds(460, 415, 90, 40);
         buttonAdd.addActionListener(this);
         panelInventory.add( buttonAdd);
         
         // BUTTON: sold
-        buttonSold = new JButton("SOLD");        
+        buttonSold = new JButton("SOLD");
+        buttonSold.setFont(new Font("Lato", Font.BOLD, 14));
         buttonSold.setForeground(textColor);
         buttonSold.setBackground(defaultButtonColor);
         buttonSold.setFocusPainted(false);
         buttonSold.setBorderPainted(false);    
-        buttonSold.setBounds(560, 415, 80, 40);
+        buttonSold.setBounds(575, 415, 90, 40);
         buttonSold.addActionListener(this);
         panelInventory.add( buttonSold);
 
         // BUTTON: update
         buttonUpdate = new JButton("UPDATE");
-        buttonUpdate.setBounds(25, 200, 87, 30);
+        buttonUpdate.setFont(new Font("Poppins", Font.BOLD, 11));
+        buttonUpdate.setForeground(textColor);
+        buttonUpdate.setBackground(new Color(187, 191, 92));
+        buttonUpdate.setFocusPainted(false);
+        buttonUpdate.setBorderPainted(false);
+        buttonUpdate.setBounds(25, 205, 80, 30);
         buttonUpdate.addActionListener(this);
         panelDetails.add(buttonUpdate);
         
         // BUTTON: delete
         buttonDelete = new JButton("DELETE");
-        buttonDelete.setBounds(112, 200, 88, 30);
+        buttonDelete.setFont(new Font("Poppins", Font.BOLD, 11));
+        buttonDelete.setForeground(textColor);
+        buttonDelete.setBackground(new Color(190, 92, 107));
+        buttonDelete.setFocusPainted(false);
+        buttonDelete.setBorderPainted(false); 
+        buttonDelete.setBounds(120, 205, 80, 30);
         buttonDelete.addActionListener(this);
         panelDetails.add(buttonDelete);
+        
+        // BUTTON: undo
+        buttonUndo = new JButton("UNDO");
+        buttonUndo.setFont(new Font("Lato", Font.BOLD, 10));
+        buttonUndo.setForeground(new Color(70, 70, 70));
+        buttonUndo.setBackground(new Color(170, 180, 180));
+        buttonUndo.setBorder(BorderFactory.createLineBorder(new Color(150, 160, 160), 1));
+        buttonUndo.setFocusPainted(false);    
+        buttonUndo.setBounds(555, 30, 50, 30);
+        buttonUndo.addActionListener(this);
+        panelInventory.add( buttonUndo);
+        
+        // BUTTON: redo
+        buttonRedo = new JButton("REDO");
+        buttonRedo.setFont(new Font("Lato", Font.BOLD, 10));
+        buttonRedo.setForeground(new Color(70, 70, 70));
+        buttonRedo.setBackground(new Color(170, 180, 180));
+        buttonRedo.setBorder(BorderFactory.createLineBorder(new Color(150, 160, 160), 1));
+        buttonRedo.setFocusPainted(false);   
+        buttonRedo.setBounds(615, 30, 50, 30);
+        buttonRedo.addActionListener(this);
+        panelInventory.add( buttonRedo);
+        
         
         
         // PANEL: inventory table
         panelInventoryTable = new JPanel();
-        panelInventoryTable.setBounds(50, 125, 350, 350);
+        panelInventoryTable.setBackground(new Color(101, 133, 135));
+        panelInventoryTable.setBorder(new LineBorder(new Color(101, 133, 135), 2));
+        panelInventoryTable.setBounds(40, 80, 385, 410);
         panelInventory.add(panelInventoryTable);
        
         createInventoryTable();   
     }
     
 
+
     public void createInventoryTable() {
         // TABLE: inventory
         String[] headers = {"Products", "Category", "Cost", "Price", "Quantity"};
-        tableModel = new DefaultTableModel(headers, 0);
-        productTable = new JTable(tableModel);
-        productTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        productTable.setFillsViewportHeight(true);
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
-        productTable.setRowSorter(sorter);
-        productTable.getTableHeader().setReorderingAllowed(false);
-        productTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        productTable.setDefaultEditor(Object.class, null);
-        
-        // set width for each column
-        productTable.getColumnModel().getColumn(0).setPreferredWidth(100); // Products
-        productTable.getColumnModel().getColumn(1).setPreferredWidth(80);  // Category
-        productTable.getColumnModel().getColumn(2).setPreferredWidth(60);  // Cost Price
-        productTable.getColumnModel().getColumn(3).setPreferredWidth(60);  // Selling Price
-        productTable.getColumnModel().getColumn(4).setPreferredWidth(60);  // Quantity
-        
-        // table selection function
-        productTable.getSelectionModel().addListSelectionListener(this);
-        
-        // inventory table dimensions
-        JScrollPane scrollPane = new JScrollPane(productTable);
-        scrollPane.setPreferredSize(new Dimension(350, 350));
+        inventoryTableModel = new DefaultTableModel(headers, 0);
+        inventoryTable = new JTable(inventoryTableModel) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Disable cell editing
+            }
+
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+
+                // Apply hover effect
+                if (row == hoveredRow) {
+                    c.setBackground(new Color(220, 240, 230)); // Hover color
+                } else {
+                    c.setBackground(getBackground()); // Default background color
+                }
+                return c;
+            }
+        };
+
+        // set the row height to 22
+        inventoryTable.setRowHeight(22);
+
+        // mouse motion listener for hover effect
+        inventoryTable.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int row = inventoryTable.rowAtPoint(e.getPoint());
+                if (row != hoveredRow) {
+                    hoveredRow = row;
+                    inventoryTable.repaint(); // Repaint to reflect the hover effect
+                }
+            }
+        });
+
+        // mouse listener for click event (row selection)
+        inventoryTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = inventoryTable.rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    inventoryTable.setRowSelectionInterval(row, row); // Select the clicked row
+                }
+            }
+        });
+
+        // ListSelectionListener to retrieve selected row data
+        inventoryTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = inventoryTable.getSelectedRow();
+                if (selectedRow != -1) {
+                    // Retrieve data from the selected row
+                    String productName = inventoryTable.getValueAt(selectedRow, 0).toString();
+                    String category = inventoryTable.getValueAt(selectedRow, 1).toString();
+                    String cost = inventoryTable.getValueAt(selectedRow, 2).toString();
+                    String price = inventoryTable.getValueAt(selectedRow, 3).toString();
+                    String quantity = inventoryTable.getValueAt(selectedRow, 4).toString();
+
+                    // Set the retrieved data into your text fields
+                    fieldDetailProduct.setText(productName);
+                    fieldDetailCategory.setText(category);
+                    fieldDetailCost.setText(cost);
+                    fieldDetailPrice.setText(price);
+                    fieldDetailQuantity.setText(quantity);
+                }
+            }
+        });
+
+        // Set column widths
+        inventoryTable.getColumnModel().getColumn(0).setPreferredWidth(105); // Products
+        inventoryTable.getColumnModel().getColumn(1).setPreferredWidth(95);  // Category
+        inventoryTable.getColumnModel().getColumn(2).setPreferredWidth(64);  // Cost Price
+        inventoryTable.getColumnModel().getColumn(3).setPreferredWidth(64);  // Selling Price
+        inventoryTable.getColumnModel().getColumn(4).setPreferredWidth(64);  // Quantity
+
+        // custom header 
+        inventoryTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12)); // Bold text
+        inventoryTable.getTableHeader().setBackground(new Color(200, 220, 210)); // Darker shade
+        inventoryTable.getTableHeader().setForeground(new Color(40, 40, 40)); // Optional: Black text
+        inventoryTable.getTableHeader().setResizingAllowed(false);
+        inventoryTable.getTableHeader().setReorderingAllowed(false);
+
+        // Add table to JScrollPane
+        JScrollPane scrollPane = new JScrollPane(inventoryTable);
+        scrollPane.setBackground(backgroundColor);
+        scrollPane.setPreferredSize(new Dimension(385, 415));
+
+        // Assuming panelInventoryTable is your container panel, adding the scroll pane to it
         panelInventoryTable.add(scrollPane);
-        panelInventoryTable.setBackground(new Color(101, 133, 135));
-        panelInventoryTable.setBorder(new LineBorder(new Color(101, 133, 135), 2));                   
+
+        // Ensure that the panel revalidates and repaints itself
+        panelInventoryTable.revalidate();
+        panelInventoryTable.repaint();
+    }
+
+
+    public void refreshInventoryTable() {
+        inventoryTableModel.setRowCount(0); 
+
+        // Traverse through the linked list and add each product to the table
+        ProductNode current = productList.head;
+        while (current != null) {
+            inventoryTableModel.addRow(new Object[]{
+                current.getName(),
+                current.getCategory(),
+                current.getCost(),
+                current.getPrice(),
+                current.getQuantity()
+            });
+            current = current.next;
+        }
     }
     
     
@@ -663,13 +1342,15 @@ public class Main implements ActionListener, ListSelectionListener {
         // PANEL: history
         panelHistory = new JPanel();
         panelHistory.setLayout(null);
-        panelHistory.setBackground(new Color(209, 222, 222));
+        panelHistory.setBackground(backgroundColor);
         panelHistory.setBounds(WIDTH / 5, 50, WIDTH - (WIDTH / 5), HEIGHT);  
         
         // PANEL: hstory table
         panelHistoryTable = new JPanel();
         panelHistoryTable.setBounds(50, 50, 620, 400);
-        panelHistoryTable.add(panelHistoryTable);
+        panelHistory.add(panelHistoryTable);
+        
+        createHistoryTable();
     }
     
     
@@ -688,6 +1369,7 @@ public class Main implements ActionListener, ListSelectionListener {
         historyTable.setCellSelectionEnabled(false);
         historyTable.setRowSelectionAllowed(false);
         historyTable.setColumnSelectionAllowed(false);
+        historyTable.setRowHeight(25);
         
         // set width for each column
         historyTable.getColumnModel().getColumn(0).setPreferredWidth(150); // Action
@@ -705,9 +1387,68 @@ public class Main implements ActionListener, ListSelectionListener {
         panelHistoryTable.setBackground(new Color(101, 133, 135));
         panelHistoryTable.setBorder(new LineBorder(new Color(101, 133, 135), 2));
     }
+    
+        
+    public void addActionToHistory(Action action) {
+        // Push action to the stack
+        historyStack.push(action);
+        undoStack.push(action);
 
-    
-    
+        // Add the action to the history table
+        historyTableModel.insertRow(0, new Object[] {
+            action.getType(),
+            action.getProductName(),
+            action.getCategory(),
+            action.getCost(),
+            action.getPrice(),
+            action.getQuantity()
+        });
+
+        // Set the new row color based on the action type
+        historyTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                // Center the action type (first column)
+                if (column == 0) {
+                    ((JLabel) c).setHorizontalAlignment(SwingConstants.CENTER);  // Center align the first column (Action Type)
+                }
+
+                // Color based on action type
+                String actionType = (String) table.getValueAt(row, 0); // Get action type from the row
+
+                if (actionType != null) {
+                    switch (actionType) {
+                        case "ADD":
+                            c.setBackground(new Color(204, 255, 204)); // Pastel Green for "ADD"
+                            break;
+                        case "UPDATE":
+                            c.setBackground(new Color(255, 255, 178)); // Pastel Yellow for "UPDATE"
+                            break;
+                        case "DELETE":
+                            c.setBackground(new Color(255, 204, 204)); // Pastel Red for "DELETE"
+                            break;
+                        case "SOLD":
+                            c.setBackground(new Color(173, 216, 230)); // Pastel Blue for "SOLD"
+                            break;
+                        default:
+                            c.setBackground(table.getBackground()); // Default background for unhandled cases
+                            break;
+                    }
+                }
+
+                return c;
+            }
+        });
+
+        // Refresh the table to apply the new renderer
+        historyTable.repaint();
+    }
+
+
+
+
     
     
     public void initializeAccountPanel() {
@@ -717,8 +1458,8 @@ public class Main implements ActionListener, ListSelectionListener {
         panelAccount.setLayout(null);
         
         // LABEL: company name
-        labelCompanyName = new JLabel("Bagtas Retail Company Ltd.");
-        labelCompanyName.setBounds(200, 150, 300, 60);
+        labelCompanyName = new JLabel("Global Marketing Retail Company Ltd.");
+        labelCompanyName.setBounds(185, 130, 350, 60);
         labelCompanyName.setFont(new Font("Poppins", Font.BOLD, 18));
         labelCompanyName.setForeground(new Color(71, 71, 71));
         labelCompanyName.setHorizontalAlignment(SwingConstants.CENTER);
@@ -726,49 +1467,77 @@ public class Main implements ActionListener, ListSelectionListener {
         
         // LABEL: company address
         labelCompanyAddress = new JLabel("123, J.P. Rizal St., Abucay, Bataan");
-        labelCompanyAddress.setBounds(200, 190, 300, 60);
-        labelCompanyAddress.setFont(new Font("Poppins", Font.BOLD, 18));
+        labelCompanyAddress.setBounds(200, 170, 300, 60);
+        labelCompanyAddress.setFont(new Font("Poppins", Font.PLAIN, 18));
         labelCompanyAddress.setForeground(new Color(71, 71, 71));
         labelCompanyAddress.setHorizontalAlignment(SwingConstants.CENTER);
         panelAccount.add(labelCompanyAddress);
         
         // LABEL: company contacts
         labelCompanyContacts = new JLabel("0909 123 4567");
-        labelCompanyContacts.setBounds(200, 230, 300, 60);
-        labelCompanyContacts.setFont(new Font("Poppins", Font.BOLD, 18));
+        labelCompanyContacts.setBounds(200, 210, 300, 60);
+        labelCompanyContacts.setFont(new Font("Poppins", Font.PLAIN, 18));
         labelCompanyContacts.setForeground(new Color(71, 71, 71));
         labelCompanyContacts.setHorizontalAlignment(SwingConstants.CENTER);
         panelAccount.add(labelCompanyContacts);
         
+        // BUTTON: log out
+        buttonLogOut = new JButton("Log Out");
+        buttonLogOut.setFont(new Font("Arial", Font.BOLD, 14));
+        buttonLogOut.setForeground(textColor);
+        buttonLogOut.setBackground(new Color(190, 92, 107));
+        buttonLogOut.setFocusPainted(false);
+        buttonLogOut.setBorderPainted(false);
+        buttonLogOut.setBounds(305, 320, 100, 40);
+        buttonLogOut.addActionListener(this);
+        buttonLogOut.setVisible(false);
+        panelAccount.add(buttonLogOut);
+        
         // LABEL: company email
-        labelCompanyEmail = new JLabel("bagtas1024@company.com");
-        labelCompanyEmail.setBounds(200, 270, 300, 60);
-        labelCompanyEmail.setFont(new Font("Poppins", Font.BOLD, 18));
+        labelCompanyEmail = new JLabel("globalmarketing@company.com");
+        labelCompanyEmail.setBounds(200, 250, 300, 60);
+        labelCompanyEmail.setFont(new Font("Poppins", Font.PLAIN, 18));
         labelCompanyEmail.setForeground(new Color(71, 71, 71));
         labelCompanyEmail.setHorizontalAlignment(SwingConstants.CENTER);
-        panelAccount.add(labelCompanyEmail);
+        panelAccount.add(labelCompanyEmail);     
         
-        // ICON: profile
-        ImageIcon profImageFile = new ImageIcon(getClass().getResource("images/bagtas_profile.png"));
-        Image profImage = profImageFile.getImage();
-        Image scaledImg = profImage.getScaledInstance(60, 60, Image.SCALE_SMOOTH);
-        ImageIcon profIcon = new ImageIcon(scaledImg);
-        JLabel profHandle = new JLabel(profIcon);
-        profHandle.setBounds(330, 50, 60, 60);
-        panelAccount.add(profHandle);
-        
-        // IMAGE: account background
-        ImageIcon bgImageFile = new ImageIcon(getClass().getResource("images/account_background.jpg"));
-        Image bgImage = bgImageFile.getImage();
-        Image scaledImage = bgImage.getScaledInstance(720, 550, Image.SCALE_SMOOTH);
-        ImageIcon background = new ImageIcon(scaledImage);
-        JLabel bgHandle = new JLabel(background);
-        bgHandle.setBounds(0, 0, 720, 550);
-        panelAccount.add(bgHandle);
+        try {
+            // ICON: Load profile image from the cloud (URL)
+            URL profImageUrl = new URL("https://drive.google.com/uc?id=1olDyVA3p88BMqh5qjVgaX9la9k1KFrw5");  // replace with your image URL
+            ImageIcon profImageIcon = new ImageIcon(profImageUrl);
+            Image profImage = profImageIcon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+            JLabel profHandle = new JLabel(new ImageIcon(profImage));
+            profHandle.setBounds(330, 50, 60, 60);
+            panelAccount.add(profHandle);
+
+            // IMAGE: Load background image from the cloud (URL)
+            URL bgImageUrl = new URL("https://drive.google.com/uc?id=1bc4LiACzgXDU3XqXz_S0ohqzbq1nzPbj");  // replace with your image URL
+            ImageIcon bgImageIcon = new ImageIcon(bgImageUrl);
+            Image bgImage = bgImageIcon.getImage().getScaledInstance(720, 550, Image.SCALE_SMOOTH);
+            JLabel bgHandle = new JLabel(new ImageIcon(bgImage));
+            bgHandle.setBounds(0, 0, 720, 550);
+            panelAccount.add(bgHandle);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            // Fallback for the profile image: Light gray circle
+            JLabel fallbackIcon = new JLabel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    g.setColor(Color.LIGHT_GRAY);
+                    g.fillOval(0, 0, 60, 60);
+                }
+            };
+            fallbackIcon.setBounds(330, 50, 60, 60);
+            panelAccount.add(fallbackIcon);
+
+            // Fallback for the background: Solid background color
+            panelAccount.setBackground(new Color(240, 240, 240));  // Light gray background
+        }
     }
     
-
-
     
     
     public void initializeAboutPanel() {
@@ -787,20 +1556,29 @@ public class Main implements ActionListener, ListSelectionListener {
     // METHODS FOR LOGIN AND REGISTER
     
     public void authenticateLogin() {
-        String companyID = fieldCompanyID.getText();
-        String password = new String(fieldPassword.getPassword());
+        // companyID = fieldCompanyID.getText();
+        // password = new String(fieldPassword.getPassword());
+        
+        // TEMP: Pre-Determined Values/Function For Demo (skip login)
+        companyID = "Bagtas1024";
+        password = "bagtascompany123";
         
         if (accounts.containsKey(companyID)) {
             if (accounts.get(companyID).equals(password)) {                
                 // login success
+                // loadCompanyData(companyID);
+                // TEMP: Pre-Determined Values/Function For Demo (skip login)
+                setSelectedNavButton(dashboardNavButton);
                 labelMessage.setText("");
                 panelBackground.setVisible(false);
                 panelLogin.setVisible(false);
                 panelNavigation.setVisible(true);
                 panelHeader.setVisible(true);
                 panelDashboard.setVisible(true);
-                setSelectedNavButton(dashboardNavButton);
-                loadCompanyData(companyID);
+                
+                labelProductSoldValue.setText(String.valueOf(dashboardData.get("Products Sold")));
+                labelRevenueValue.setText("$" + String.valueOf(dashboardData.get("Revenue")));
+                labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
             } else {
                 // incorrect password
                 labelMessage.setText("Incorrect Password. Please Try Again.");
@@ -813,13 +1591,14 @@ public class Main implements ActionListener, ListSelectionListener {
             labelMessage.setForeground(new Color(219, 53, 53));
             labelMessage.setVisible(true);
         }
+        
     }
     
     
     
     public void registerPressed() {
-        String companyID = fieldCompanyID.getText();
-        String password = new String(fieldPassword.getPassword());
+        companyID = fieldCompanyID.getText();
+        password = new String(fieldPassword.getPassword());
         
         if (!accounts.containsKey(companyID)) {
             if (password.length() >= 16) {
@@ -849,19 +1628,14 @@ public class Main implements ActionListener, ListSelectionListener {
     
     
     
-    
-    
-    
     // METHODS FOR HANDLING, SAVING AND LOADING DATA
    
     public void initializeData() {
-        // ilalagay sa hashmap yung content ng accounts.txt
-        loadAccounts();
+        // loadAccounts();
     }
     
-    
     public void loadAccounts() {
-        
+        // retrieve accounts credentials from the account.txt
         try (BufferedReader reader = new BufferedReader(new FileReader("database/accounts.txt"))) {
             String line = reader.readLine();
             while ((line = reader.readLine()) != null) {
@@ -876,10 +1650,9 @@ public class Main implements ActionListener, ListSelectionListener {
     }
     
     
-    
     public void saveAccounts() {
+        // save registered accounts to accounts.txt
         String filePath = "database/accounts.txt";
-      
         try {
             // ensure the directory exists, create if it doesn't
             Path directoryPath = Paths.get(filePath).getParent();
@@ -891,7 +1664,9 @@ public class Main implements ActionListener, ListSelectionListener {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
                 for (Map.Entry<String, String> entry : accounts.entrySet()) {
                     if (!existingAccounts.contains(entry.getKey())) {
-                        writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+                        writer.write("\n" + entry.getKey() + "," + entry.getValue());
+                    } else {
+                        labelMessage.setText("CompanyID already exists.");
                     }
                 }
                 System.out.println("HashMap has been saved to " + filePath);
@@ -899,49 +1674,63 @@ public class Main implements ActionListener, ListSelectionListener {
             } catch (IOException e) {
                 System.out.println("Error writing to file: " + e.getMessage());
             }
-
         } catch (IOException e) {
             System.out.println("Error creating directories: " + e.getMessage());
         }
     }
     
     
-    
     public void loadCompanyData(String compID) {
-        int lineNumber = 1;
-        try (BufferedReader reader = new BufferedReader(new FileReader("database/"+compID.toLowerCase()+"database.txt"))) {
-            String line = reader.readLine();
-            
-            headerText = line;
-            // transfer each dashboard data from txt to their respective variables
-            String[] dashboardData = reader.readLine().split(",");
-            numSoldProducts = Integer.parseInt(dashboardData[0].trim());
-            revenue = Double.parseDouble(dashboardData[1].trim());
-
-            // transfer each daily profit data from txt to their respective variables
-            String[] profitData = reader.readLine().split(",");
-            for (String profit : profitData) {
-                double value = Double.parseDouble(profit.trim());
-                dailyProfitData.add(value);
+        // load company data for the current logged in companyID
+        String companyDataFilePath = "database/"+compID.toLowerCase()+"database.txt";
+       
+        try {
+            // ensure the directory exists, create if it doesn't
+            Path directoryPath = Paths.get(companyDataFilePath).getParent();
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
             }
-            System.out.println();
+            
+            try (BufferedReader reader = new BufferedReader(new FileReader(companyDataFilePath))) {
+                // retrieve company name
+                String line = reader.readLine();
+                headerText = line;
+                companyName.setText(headerText);
+                
+                // retrieve dashboard data 
+                String[] dashboardFileData = reader.readLine().split(",");
+                dashboardData.put("Products Sold", Integer.parseInt(dashboardFileData[0].trim()));
+                dashboardData.put("Revenue", Double.parseDouble(dashboardFileData[1].trim()));
+                
+                // retrieve daily profit data
+                String[] profitData = reader.readLine().split(",");
+                for (String profit : profitData) {
+                    double value = Double.parseDouble(profit.trim());
+                }
+                reader.readLine(); // skip header
+                
+                // retrieve product data
+                int tempStock = 0;
+                while ((line = reader.readLine()) != null) {
+                    String[] data = line.split(",");
+                    String name = data[0].trim();
+                    String category = data[1].trim();
+                    double costPrice = Double.parseDouble(data[2].trim());
+                    double sellingPrice = Double.parseDouble(data[3].trim());
+                    int quantity = Integer.parseInt(data[4].trim());
 
-            reader.readLine(); // skip header
-            // transfer each product data from txt to Product
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-                String[] data = line.split(",");
-                String name = data[0].trim();
-                String category = data[1].trim();
-                double costPrice = Double.parseDouble(data[2].trim());
-                double sellingPrice = Double.parseDouble(data[3].trim());
-                int quantity = Integer.parseInt(data[4].trim());
-
-                // make product object
-                addProductRow(name, category, costPrice, sellingPrice, quantity);
-                Product product = new Product(name, category, costPrice, sellingPrice, quantity);
-                productList.add(product);
-                inStock += 1;
+                    // instantiate product object
+                    ProductNode product = new ProductNode(name, category, costPrice, sellingPrice, quantity);
+                    productList.addProduct(product);
+                    tempStock += quantity;
+                }
+                
+                dashboardData.put("In-Stock", tempStock);
+                
+                // display each product node to inventory table
+                refreshInventoryTable();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -949,199 +1738,76 @@ public class Main implements ActionListener, ListSelectionListener {
     }
     
     
-    
-    
-    
-    
-    
-    
-    // METHODS FOR INVENTORY MODIFICATIONS AND HISTORY ACTIONS
+    public void initializeDemoMode() {
+        // Set company name
+        headerText = "Global Marketing Retail Company Ltd.";
+        companyName.setText(headerText);
 
-    public void addProductRow(String product, String category, double costPrice, double sellingPrice, int quantity) {
-        Object[] rowData = {product, category, costPrice, sellingPrice, quantity};
-        tableModel.addRow(rowData);
-    }
-    
-    
-    
-    public void addHistoryRow(String action, int row) {
-        String name = String.valueOf(productTable.getValueAt(row, 0));
-        String category = String.valueOf(productTable.getValueAt(row, 1));
-        String cost = String.valueOf(productTable.getValueAt(row, 2));
-        String price = String.valueOf(productTable.getValueAt(row, 3));
-        String quantity = String.valueOf(productTable.getValueAt(row, 4));
-        Object[] rowData = {action, name, category, cost, price, quantity};
-        
-        // change color according to action
-        historyTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        // Set dashboard data
+        dashboardData.put("Products Sold", 352);
+        dashboardData.put("Revenue", 7046.29);
 
-                // Check action column (assuming action column is the first column)
-                String action = (String) table.getValueAt(row, 0);
+        // Load product data
+        Object[][] products = {
+            {"Smartwatch", "Electronics", 6500, 7800, 18},
+            {"Milk", "Food", 45, 55, 320},
+            {"Headphones", "Accessories", 1800, 2300, 95},
+            {"Chicken", "Food", 140, 170, 85},
+            {"Printer", "Office Supplies", 5500, 6800, 37},
+            {"Apple", "Food", 8, 12, 720},
+            {"Laptop", "Electronics", 28000, 33000, 22},
+            {"Tablet", "Electronics", 7500, 9500, 28},
+            {"Eggs", "Food", 4, 6, 1100},
+            {"Monitor", "Electronics", 11000, 14000, 20},
+            {"Bread", "Food", 12, 18, 480},
+            {"Camera", "Electronics", 22000, 27000, 13},
+            {"Keyboard", "Accessories", 1200, 1600, 65},
+            {"Rice", "Food", 35, 45, 900},
+            {"Smartphone", "Electronics", 13000, 16000, 45}
+        };
 
-                // Set row color based on action
-                if ("ADD".equals(action)) {
-                    c.setBackground(Color.BLUE);
-                } else if ("SOLD".equals(action)) {
-                    c.setBackground(Color.GREEN);
-                } else if ("UPDATE".equals(action)) {
-                    c.setBackground(Color.YELLOW);
-                } else if ("DELETE".equals(action)) {
-                    c.setBackground(Color.RED);
-                } else {
-                    c.setBackground(Color.WHITE); // Default color for other actions
-                }
+        int totalStock = 0;
 
-                return c;
-            }
-        });
+        for (Object[] productData : products) {
+            String name = (String) productData[0];
+            String category = (String) productData[1];
+            double costPrice = Double.parseDouble(productData[2].toString());
+            double sellingPrice = Double.parseDouble(productData[3].toString());
+            int quantity = Integer.parseInt(productData[4].toString());
 
-        
-        // add the history action into table
-        historyTableModel.insertRow(0, rowData);
-    }
-    
-    
-    
-    public void addProduct() {
-        // get the product details from text field
-        DefaultTableModel model = (DefaultTableModel) productTable.getModel();
-        String name = fieldDetailProduct.getText();
-        String category = fieldDetailCategory.getText();
-        String cost = fieldDetailCost.getText();
-        String price = fieldDetailPrice.getText();
-        String quantity = fieldDetailQuantity.getText();
-        model.addRow(new Object[]{name, category, cost, price, quantity});
+            // Create product node
+            ProductNode product = new ProductNode(name, category, costPrice, sellingPrice, quantity);
+            productList.addProduct(product);
 
-        inStock += Integer.parseInt(quantity);;
-        labelInStockValue.setText(String.valueOf(inStock));
-        
-        historyTableModel.insertRow(0, new Object[]{"ADD", name, category, cost, price, quantity});
-    }
-    
-    
-    
-    public void soldProduct() {
-        int selectedRow = productTable.getSelectedRow();
-        if (selectedRow != -1) {
-            String quantityStr = JOptionPane.showInputDialog("Enter quantity sold:");
-            try {
-                int quantitySold = Integer.parseInt(quantityStr);
-                int currentQuantity = Integer.parseInt(productTable.getValueAt(selectedRow, 4).toString());
-                double productPrice = (double) productTable.getValueAt(selectedRow, 3);
-                if (quantitySold > currentQuantity) {
-                    JOptionPane.showMessageDialog(null, "Quantity sold cannot be greater than available quantity.");
-                } else {
-                    int newQuantity = currentQuantity - quantitySold;
-                    productTable.setValueAt(String.valueOf(newQuantity), selectedRow, 4);
-                    numSoldProducts += quantitySold;
-                    revenue += quantitySold * productPrice;
-                    inStock -= quantitySold;
-                    labelRevenueValue.setText("$"+String.valueOf(revenue));
-                    labelProductSoldValue.setText(String.valueOf(numSoldProducts));
-                    labelInStockValue.setText(String.valueOf(inStock));
-                    
-                    addHistoryRow("SOLD", selectedRow);
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(null, "Please enter a valid number for quantity sold.");
-            }
-        } else {
-            JOptionPane.showMessageDialog(null, "No product selected");
-        }
-    }
-    
-    
-    
-    public void updateProduct() {
-        int selectedRow = productTable.getSelectedRow();
-        String productName = productTable.getValueAt(selectedRow, 0).toString();
-        int prev = Integer.parseInt(productTable.getValueAt(selectedRow, 4).toString());
-        if (selectedRow != -1) {
-            productTable.setValueAt(fieldDetailProduct.getText(), selectedRow, 0);
-            productTable.setValueAt(fieldDetailCategory.getText(), selectedRow, 1);
-            productTable.setValueAt(fieldDetailCost.getText(), selectedRow, 2);
-            productTable.setValueAt(fieldDetailPrice.getText(), selectedRow, 3);
-            productTable.setValueAt(fieldDetailQuantity.getText(), selectedRow, 4);
-        } else {
-            JOptionPane.showMessageDialog(null, "No product selected");
+            // Add to total stock
+            totalStock += quantity;
         }
 
-        for (Product product : productList) {
-            if (product.getName().equals(productName)) {
-                product.setName(fieldDetailProduct.getText());
-                product.setCategory(fieldDetailCategory.getText());
-                product.setCost(Double.parseDouble(fieldDetailCost.getText()));
-                product.setPrice(Double.parseDouble(fieldDetailPrice.getText()));
-                product.setQuantity(Integer.parseInt(fieldDetailQuantity.getText()));
-            }
-        }
+        dashboardData.put("In-Stock", totalStock);
 
-        int quantity = Integer.parseInt(fieldDetailQuantity.getText());
-        inStock += (quantity-prev);
-        labelInStockValue.setText(String.valueOf(inStock));
+        // Refresh inventory table
+        refreshInventoryTable();
         
-        addHistoryRow("UPDATE", selectedRow);
-    }
-    
-    
-    
-    public void deleteProduct() {
-        
-        int selectedRow = productTable.getSelectedRow();
-        String removedName = productTable.getValueAt(selectedRow, 0).toString();
-        int removedProducts = Integer.parseInt(productTable.getValueAt(selectedRow, 4).toString());
-        if (selectedRow != -1) {
-            DefaultTableModel model = (DefaultTableModel) productTable.getModel();
-            model.removeRow(selectedRow);
-        } else {
-            JOptionPane.showMessageDialog(null, "No product selected");
-        }
-        inStock -= removedProducts;
-        labelInStockValue.setText(String.valueOf(inStock));
+        setSelectedNavButton(dashboardNavButton);
+        labelMessage.setText("");
+        panelBackground.setVisible(false);
+        panelLogin.setVisible(false);
+        panelNavigation.setVisible(true);
+        panelHeader.setVisible(true);
+        panelDashboard.setVisible(true);
 
-        for (Product product : productList) {
-            if (product.getName().equals(removedName)) {
-                productList.remove(product);
-            }
-        }
-        addHistoryRow("DELETE", selectedRow);
+        labelProductSoldValue.setText(String.valueOf(dashboardData.get("Products Sold")));
+        labelRevenueValue.setText("$" + String.valueOf(dashboardData.get("Revenue")));
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+        
+        buttonLogOut.setVisible(false);
     }
-    
-    
-    
-    
-    
-    
-    
+
    
-    // METHODS FOR COSTUMIZED NAVIGATION BUTTONS
     
-    private void setSelectedNavButton(JButton selectedButton) {
-        JButton[] buttons = {dashboardNavButton, inventoryNavButton, historyNavButton, accountNavButton, aboutNavButton};
-        for (JButton button : buttons) {
-            if (button == selectedButton) {
-                button.setForeground(loginPanelBgColor); // Change text color to indicate selected
-                button.setOpaque(true); // Ensure button is opaque to show background color
-                button.setBackground(new Color(137, 179, 167)); // Use highlight color for background
-            } else {
-                button.setForeground(textColor); // Reset text color for non-selected buttons
-                button.setOpaque(false); // Ensure non-selected buttons are not opaque
-            }
-        }
-    }
 
     
-    
-    
-    
-    
-    
-    
-    
-    // METHODS FOR ACTIONLISTENER AND LISTSELECTIONLISTENER
+    // METHODS FOR ACTIONLISTENER 
     
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -1163,6 +1829,7 @@ public class Main implements ActionListener, ListSelectionListener {
             panelHistory.setVisible(false);
             panelAbout.setVisible(false);
             panelAccount.setVisible(false);
+            buttonLogOut.setVisible(false);
             setSelectedNavButton(dashboardNavButton);
         } else if (e.getSource() == inventoryNavButton) {
             panelDashboard.setVisible(false);
@@ -1170,6 +1837,7 @@ public class Main implements ActionListener, ListSelectionListener {
             panelHistory.setVisible(false);
             panelAbout.setVisible(false);
             panelAccount.setVisible(false);
+            buttonLogOut.setVisible(false);
             setSelectedNavButton(inventoryNavButton);
         } else if (e.getSource() == historyNavButton) {
             panelDashboard.setVisible(false);
@@ -1177,6 +1845,7 @@ public class Main implements ActionListener, ListSelectionListener {
             panelHistory.setVisible(true);
             panelAbout.setVisible(false);
             panelAccount.setVisible(false);
+            buttonLogOut.setVisible(false);
             setSelectedNavButton(historyNavButton);
         } else if (e.getSource() == aboutNavButton) {
             panelDashboard.setVisible(false);
@@ -1184,6 +1853,7 @@ public class Main implements ActionListener, ListSelectionListener {
             panelHistory.setVisible(false);
             panelAbout.setVisible(true);
             panelAccount.setVisible(false);
+            buttonLogOut.setVisible(false);
             setSelectedNavButton(aboutNavButton);
         } else if (e.getSource() == accountNavButton) {
             panelDashboard.setVisible(false);
@@ -1191,6 +1861,7 @@ public class Main implements ActionListener, ListSelectionListener {
             panelHistory.setVisible(false);
             panelAbout.setVisible(false);
             panelAccount.setVisible(true);
+            buttonLogOut.setVisible(true);
             setSelectedNavButton(accountNavButton);
         } else if (e.getSource() == buttonAdd) {
             addProduct();
@@ -1200,34 +1871,1105 @@ public class Main implements ActionListener, ListSelectionListener {
             updateProduct();
         } else if (e.getSource() == buttonDelete) {
             deleteProduct();
-        }
-    }
-    
-    
-    
-    @Override
-    public void valueChanged(ListSelectionEvent e) {
-        if (!e.getValueIsAdjusting()) {
-            int selectedRow = productTable.getSelectedRow();
-            if (selectedRow != -1) {
-                // retrieve data from the selected row
-                String productName = productTable.getValueAt(selectedRow, 0).toString();
-                String category = productTable.getValueAt(selectedRow, 1).toString();
-                String cost = productTable.getValueAt(selectedRow, 2).toString();
-                String price = productTable.getValueAt(selectedRow, 3).toString();
-                String quantity = productTable.getValueAt(selectedRow, 4).toString();
+        } else if (e.getSource() == buttonUndo) {
+            // Perform undo logic
+            if (!historyStack.isEmpty()) {
+                // Pop the last action from historyStack
+                Action lastAction = historyStack.pop();
 
-                // set the retrieved data into your text fields
-                fieldDetailProduct.setText(productName);
-                fieldDetailCategory.setText(category);
-                fieldDetailCost.setText(cost);
-                fieldDetailPrice.setText(price);
-                fieldDetailQuantity.setText(quantity);
+                // Perform reverse action based on the action type
+                if (lastAction.getType().equals("ADD")) {
+                undoAddProduct(lastAction);
+                } else if (lastAction.getType().equals("SOLD")) {
+                    undoSoldProduct(lastAction);
+                } else if (lastAction.getType().equals("UPDATE")) {
+                    undoUpdateProduct(lastAction);
+                } else if (lastAction.getType().equals("DELETE")) {
+                    undoDeleteProduct(lastAction);
+                } 
+
+                // Push the undone action to redoStack
+                redoStack.push(lastAction);
+            } else {
+                JOptionPane.showMessageDialog(null, "No actions to undo");
+            }
+        } else if (e.getSource() == buttonRedo) {
+            // Perform redo logic
+            if (!redoStack.isEmpty()) {
+                // Pop the last undone action from redoStack
+                Action lastUndoneAction = redoStack.pop();
+
+                // Reapply the action based on its type
+                if (lastUndoneAction.getType().equals("ADD")) {
+                    redoAddProduct(lastUndoneAction);
+                } else if (lastUndoneAction.getType().equals("SOLD")) {
+                    redoSoldProduct(lastUndoneAction);
+                } else if (lastUndoneAction.getType().equals("UPDATE")) {
+                    redoUpdateProduct(lastUndoneAction);
+                } else if (lastUndoneAction.getType().equals("DELETE")) {
+                    redoDeleteProduct(lastUndoneAction);
+                }
+
+                // Push the redone action back to historyStack
+                addActionToHistory(lastUndoneAction);
+            } else {
+                JOptionPane.showMessageDialog(null, "No actions to redo");
+            }
+        } else if (e.getSource() == buttonLogOut) {
+            int confirm = JOptionPane.showConfirmDialog(
+            null, "Are you sure you want to log out?", "Log Out", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                System.exit(0);  // Terminate the application
             }
         }
     }
     
+    
+    
+    
+    
+    public void addProduct() {
+        // Create a panel to collect product details
+        JPanel panel = new JPanel(new GridLayout(5, 2)); // 5 rows, 2 columns
+        JLabel lblProductName = new JLabel("Product Name:");
+        JTextField tfProductName = new JTextField();
+        JLabel lblCategory = new JLabel("Category:");
+        JTextField tfCategory = new JTextField();
+        JLabel lblCost = new JLabel("Cost:");
+        JTextField tfCost = new JTextField();
+        JLabel lblPrice = new JLabel("Price:");
+        JTextField tfPrice = new JTextField();
+        JLabel lblQuantity = new JLabel("Quantity:");
+        JTextField tfQuantity = new JTextField();
+        panel.setBackground(new Color(245, 245, 247));
+
+        panel.add(lblProductName);
+        panel.add(tfProductName);
+        panel.add(lblCategory);
+        panel.add(tfCategory);
+        panel.add(lblCost);
+        panel.add(tfCost);
+        panel.add(lblPrice);
+        panel.add(tfPrice);
+        panel.add(lblQuantity);
+        panel.add(tfQuantity);
+
+        // Show the dialog
+        int option = JOptionPane.showConfirmDialog(
+            null,
+            panel,
+            "Enter Product Details",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                // Retrieve user input
+                String productName = tfProductName.getText().trim();
+                String category = tfCategory.getText().trim();
+                double cost = Double.parseDouble(tfCost.getText().trim());
+                double price = Double.parseDouble(tfPrice.getText().trim());
+                int quantity = Integer.parseInt(tfQuantity.getText().trim());
+
+                // Check if product name already exists
+                for (int i = 0; i < inventoryTableModel.getRowCount(); i++) {
+                    if (inventoryTableModel.getValueAt(i, 0).equals(productName)) {
+                        JOptionPane.showMessageDialog(null, "Product already exists in the inventory.");
+                        return; // Exit if the product already exists
+                    }
+                }
+
+                // Add the product to the linked list (if needed)
+                ProductNode newProductNode = new ProductNode(productName, category, cost, price, quantity);
+                productList.addProduct(newProductNode); // Assuming you have a method to add the product to the list
+                refreshInventoryTable();
+
+                // Update inventory and dashboard
+                dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") + quantity);
+                labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+                // Print to console (optional)
+                dashboardData.printMap();
+
+                // Add to the history stack and update the table
+                Action action = new Action("ADD", productName, category, cost, price, quantity);
+                addActionToHistory(action);
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Please enter valid numbers for cost, price, and quantity.");
+            }
+        } else {
+            // If user cancels the dialog
+            JOptionPane.showMessageDialog(null, "Product addition cancelled.");
+        }
+        
+        // clear redoStack if action is new
+        while (!redoStack.isEmpty()) {
+            redoStack.pop();
+        }
+    }
+    
+    public void undoAddProduct(Action lastAction) {
+        // Get the product details from the last action
+        String productName = lastAction.getProductName();
+        String category = lastAction.getCategory();
+        double cost = lastAction.getCost();
+        double price = lastAction.getPrice();
+        int quantity = lastAction.getQuantity();
+        
+        
+        // Remove the record from history
+        for (int i = 0; i < historyTableModel.getRowCount(); i++) {
+            if (historyTableModel.getValueAt(i, 1).equals(productName)) {
+                historyTableModel.removeRow(i);  // Remove the row from the table
+                historyTable.repaint();
+                break;  // Exit after removing the product
+            }
+        }
+
+        // Remove the product from the linked list and inventory table
+        ProductNode current = productList.head;
+        while (current != null) {
+            if (current.getName().equals(productName)) {
+                productList.removeProduct(current); // Assuming removeProduct is implemented
+                break; // Exit after removing the product
+            }
+            current = current.next;
+        }
+        
+        // Update the "In-Stock" value in dashboardData
+        dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") - quantity);
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+        // Repaint the history table (refresh it to reflect the undo)
+        refreshInventoryTable();
+        historyTable.repaint();
+
+        // Optional: Print the updated inventory and dashboard to the console
+        dashboardData.printMap();
+    }
+    
+    public void redoAddProduct(Action lastAction) {
+        // Get the product details from the last action
+        String productName = lastAction.getProductName();
+        String category = lastAction.getCategory();
+        double cost = lastAction.getCost();
+        double price = lastAction.getPrice();
+        int quantity = lastAction.getQuantity();
+
+        // Re-add the product to the linked list and inventory table
+        ProductNode newProductNode = new ProductNode(productName, category, cost, price, quantity);
+        productList.addProduct(newProductNode); // Assuming you have a method to add the product to the list
+        refreshInventoryTable();
+        System.out.println("REDO ADD");
+
+        // Update the "In-Stock" value in dashboardData
+        dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") + quantity);
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+        
+        // Repaint the history table (refresh it to reflect the redo)
+        historyTable.repaint();
+
+        // Optional: Print the updated inventory and dashboard to the console
+        dashboardData.printMap();
+    }
+
+
+
+    
+    
+    public void soldProduct() {
+        int selectedRow = inventoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            String quantityStr = JOptionPane.showInputDialog("Enter quantity sold:");
+            try {
+                int quantitySold = Integer.parseInt(quantityStr);
+                int currentQuantity = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+                double productPrice = (double) inventoryTable.getValueAt(selectedRow, 3);
+
+                if (quantitySold > currentQuantity) {
+                    JOptionPane.showMessageDialog(null, "Quantity sold cannot be greater than available quantity.");
+                } else {
+                    // Update the product quantity in the table
+                    int newQuantity = currentQuantity - quantitySold;
+                    inventoryTable.setValueAt(String.valueOf(newQuantity), selectedRow, 4);
+
+                    // Update the quantity in the linked list
+                    String productName = inventoryTable.getValueAt(selectedRow, 0).toString();
+                    ProductNode productNode = productList.getProductByName(productName);  // Use productList here
+                    if (productNode != null) {
+                        productNode.setQuantity(productNode.getQuantity() - quantitySold);  // Update quantity in the linked list
+                    }
+
+                    // Update inventory and sales info
+                    dashboardData.put("Products Sold", (int)dashboardData.get("Products Sold") + quantitySold);
+                    dashboardData.put("Revenue", (double)dashboardData.get("Revenue") +  quantitySold * productPrice);
+                    dashboardData.put("In-Stock", (int)dashboardData.get("In-Stock") - quantitySold);
+
+                    labelProductSoldValue.setText(String.valueOf(dashboardData.get("Products Sold")));
+                    labelRevenueValue.setText("$" + String.valueOf(dashboardData.get("Revenue")));
+                    labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+                    // Create an Action for the "SOLD" event
+                    Action soldAction = new Action("SOLD", inventoryTable.getValueAt(selectedRow, 0).toString(),
+                                                   inventoryTable.getValueAt(selectedRow, 1).toString(), 
+                                                   (double) inventoryTable.getValueAt(selectedRow, 2),
+                                                   (double) inventoryTable.getValueAt(selectedRow, 3), quantitySold);
+
+                    // Add the sold action to the history
+                    addActionToHistory(soldAction);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid number for quantity sold.");
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "No product selected");
+        }
+        
+        // clear redoStack if action is new
+        while (!redoStack.isEmpty()) {
+            redoStack.pop();
+        }
+    }
+    
+    
+    public void undoSoldProduct(Action lastAction) {
+        // Get the product details from the last action
+        String productName = lastAction.getProductName();
+        String category = lastAction.getCategory();
+        double cost = lastAction.getCost();
+        double price = lastAction.getPrice();
+        int quantitySold = lastAction.getQuantity();
+
+        // Find the row of the product in the inventory table
+        int selectedRow = -1;
+        for (int i = 0; i < inventoryTable.getRowCount(); i++) {
+            if (inventoryTable.getValueAt(i, 0).equals(productName)) {
+                selectedRow = i;
+                break;
+            }
+        }
+
+        // If the product was found, revert the quantity in the table
+        if (selectedRow != -1) {
+            int currentQuantity = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+            int newQuantity = currentQuantity + quantitySold;
+            inventoryTable.setValueAt(String.valueOf(newQuantity), selectedRow, 4);
+        }
+
+        // Revert the product quantity in the linked list
+        ProductNode productNode = productList.getProductByName(productName);
+        if (productNode != null) {
+            productNode.setQuantity(productNode.getQuantity() + quantitySold);
+        }
+
+        // Revert dashboard data
+        dashboardData.put("Products Sold", (int) dashboardData.get("Products Sold") - quantitySold);
+        dashboardData.put("Revenue", (double) dashboardData.get("Revenue") - quantitySold * price);
+        dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") + quantitySold);
+
+        // Update the labels
+        labelProductSoldValue.setText(String.valueOf(dashboardData.get("Products Sold")));
+        labelRevenueValue.setText("$" + String.valueOf(dashboardData.get("Revenue")));
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+        // Remove the record from history
+        for (int i = 0; i < historyTableModel.getRowCount(); i++) {
+            if (historyTableModel.getValueAt(i, 1).equals(productName)) {
+                historyTableModel.removeRow(i);  // Remove the row from the table
+                historyTable.repaint();
+                break;  // Exit after removing the product
+            }
+        }
+        
+        // Repaint the inventory and history tables
+        refreshInventoryTable();
+        historyTable.repaint();
+
+        dashboardData.printMap();
+    }
+
+    
+    public void redoSoldProduct(Action lastAction) {
+        // Get the product details from the last action
+        String productName = lastAction.getProductName();
+        String category = lastAction.getCategory();
+        double cost = lastAction.getCost();
+        double price = lastAction.getPrice();
+        int quantitySold = lastAction.getQuantity();
+
+        // Find the row of the product in the inventory table
+        int selectedRow = -1;
+        for (int i = 0; i < inventoryTable.getRowCount(); i++) {
+            if (inventoryTable.getValueAt(i, 0).equals(productName)) {
+                selectedRow = i;
+                break;
+            }
+        }
+
+        // If the product was found, re-apply the quantity change in the table
+        if (selectedRow != -1) {
+            int currentQuantity = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+            int newQuantity = currentQuantity - quantitySold;
+            inventoryTable.setValueAt(String.valueOf(newQuantity), selectedRow, 4);
+        }
+
+        // Re-apply the product quantity change in the linked list
+        ProductNode productNode = productList.getProductByName(productName);
+        if (productNode != null) {
+            productNode.setQuantity(productNode.getQuantity() - quantitySold);
+        }
+
+        // Re-apply the sales and dashboard data
+        dashboardData.put("Products Sold", (int) dashboardData.get("Products Sold") + quantitySold);
+        dashboardData.put("Revenue", (double) dashboardData.get("Revenue") + quantitySold * price);
+        dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") - quantitySold);
+
+        // Update the labels
+        labelProductSoldValue.setText(String.valueOf(dashboardData.get("Products Sold")));
+        labelRevenueValue.setText("$" + String.valueOf(dashboardData.get("Revenue")));
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+        // Repaint the inventory and history tables
+        refreshInventoryTable();
+        historyTable.repaint();
+
+        dashboardData.printMap();
+    }
+
+
+
+    
+    
+    public void updateProduct() {
+        int selectedRow = inventoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            String productName = inventoryTable.getValueAt(selectedRow, 0).toString();
+            String prevName = productName;
+            String prevCategory = inventoryTable.getValueAt(selectedRow, 1).toString();
+            double prevCost = Double.parseDouble(inventoryTable.getValueAt(selectedRow, 2).toString());
+            double prevPrice = Double.parseDouble(inventoryTable.getValueAt(selectedRow, 3).toString());
+            int prevQuantity = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+
+            // Update the product details in the table
+            inventoryTable.setValueAt(fieldDetailProduct.getText(), selectedRow, 0);
+            inventoryTable.setValueAt(fieldDetailCategory.getText(), selectedRow, 1);
+            inventoryTable.setValueAt(fieldDetailCost.getText(), selectedRow, 2);
+            inventoryTable.setValueAt(fieldDetailPrice.getText(), selectedRow, 3);
+            inventoryTable.setValueAt(fieldDetailQuantity.getText(), selectedRow, 4);
+
+            // Update the product details in the linked list directly
+            ProductNode current = productList.head;
+            while (current != null) {
+                if (current.getName().equals(productName)) {
+                    current.setName(fieldDetailProduct.getText());
+                    current.setCategory(fieldDetailCategory.getText());
+                    current.setCost(Double.parseDouble(fieldDetailCost.getText()));
+                    current.setPrice(Double.parseDouble(fieldDetailPrice.getText()));
+                    current.setQuantity(Integer.parseInt(fieldDetailQuantity.getText()));
+                    break;
+                }
+                current = current.next;
+            }
+
+            // Update in-stock value based on the new quantity
+            int newQuantity = Integer.parseInt(fieldDetailQuantity.getText());
+            dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") + (newQuantity - prevQuantity));
+            labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+            // Create an Action for the "UPDATE" event (for undo)
+            Action updateAction = new Action("UPDATE", prevName, prevCategory, prevCost, prevPrice, prevQuantity, 
+                                             fieldDetailProduct.getText(), fieldDetailCategory.getText(), 
+                                             Double.parseDouble(fieldDetailCost.getText()), 
+                                             Double.parseDouble(fieldDetailPrice.getText()), newQuantity);
+
+            // Add the update action to the history for undo/redo
+            addActionToHistory(updateAction);
+
+        } else {
+            JOptionPane.showMessageDialog(null, "No product selected");
+        }
+
+        // Clear redoStack if a new action is performed
+        while (!redoStack.isEmpty()) {
+            redoStack.pop();
+        }
+    }
+
+    
+    
+    public void undoUpdateProduct(Action lastAction) {
+        // Get the product details from the last action (before the update)
+        String prevName = lastAction.getProductName();
+        String prevCategory = lastAction.getCategory();
+        double prevCost = lastAction.getCost();
+        double prevPrice = lastAction.getPrice();
+        int prevQuantity = lastAction.getQuantity();
+
+        // Find the row of the product in the inventory table by iterating through rows
+        int selectedRow = -1;
+        for (int row = 0; row < inventoryTable.getRowCount(); row++) {
+            if (inventoryTable.getValueAt(row, 0).toString().equals(prevName)) {
+                selectedRow = row;
+                break;
+            }
+        }
+
+        if (selectedRow != -1) {
+            // Revert the product details in the table
+            inventoryTable.setValueAt(prevName, selectedRow, 0);
+            inventoryTable.setValueAt(prevCategory, selectedRow, 1);
+            inventoryTable.setValueAt(prevCost, selectedRow, 2);
+            inventoryTable.setValueAt(prevPrice, selectedRow, 3);
+            inventoryTable.setValueAt(prevQuantity, selectedRow, 4);
+
+            // Revert the product details in the linked list
+            ProductNode current = productList.head;
+            while (current != null) {
+                if (current.getName().equals(prevName)) {
+                    current.setName(prevName);
+                    current.setCategory(prevCategory);
+                    current.setCost(prevCost);
+                    current.setPrice(prevPrice);
+                    current.setQuantity(prevQuantity);
+                    break;
+                }
+                current = current.next;
+            }
+
+            // Revert in-stock value based on the previous quantity
+            int currentQuantity = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+            dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") - (currentQuantity - prevQuantity));
+            labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+            // Remove the record from history
+            for (int i = 0; i < historyTableModel.getRowCount(); i++) {
+                if (historyTableModel.getValueAt(i, 1).equals(current.getName())) {
+                    historyTableModel.removeRow(i);  // Remove the row from the table
+                    historyTable.repaint();
+                    break;  // Exit after removing the product
+                }
+            }
+        
+            // Repaint the inventory table and history table
+            refreshInventoryTable();
+            historyTable.repaint();
+        }
+    }
+    
+    
+    public void redoUpdateProduct(Action lastAction) {
+        // Get the updated product details from the last action
+        String updatedName = lastAction.getUpdatedProductName();
+        String updatedCategory = lastAction.getUpdatedCategory();
+        double updatedCost = lastAction.getUpdatedCost();
+        double updatedPrice = lastAction.getUpdatedPrice();
+        int updatedQuantity = lastAction.getUpdatedQuantity();
+
+        // Find the row of the product in the inventory table by iterating through rows
+        int selectedRow = -1;
+        for (int row = 0; row < inventoryTable.getRowCount(); row++) {
+            if (inventoryTable.getValueAt(row, 0).toString().equals(updatedName)) {
+                selectedRow = row;
+                break;
+            }
+        }
+
+        if (selectedRow != -1) {
+            // Revert the product details in the table with the updated values
+            inventoryTable.setValueAt(updatedName, selectedRow, 0);
+            inventoryTable.setValueAt(updatedCategory, selectedRow, 1);
+            inventoryTable.setValueAt(updatedCost, selectedRow, 2);
+            inventoryTable.setValueAt(updatedPrice, selectedRow, 3);
+            inventoryTable.setValueAt(updatedQuantity, selectedRow, 4);
+
+            // Revert the product details in the linked list with the updated values
+            ProductNode current = productList.head;
+            while (current != null) {
+                if (current.getName().equals(updatedName)) {
+                    current.setName(updatedName);
+                    current.setCategory(updatedCategory);
+                    current.setCost(updatedCost);
+                    current.setPrice(updatedPrice);
+                    current.setQuantity(updatedQuantity);
+                    break;
+                }
+                current = current.next;
+            }
+
+            // Revert in-stock value based on the updated quantity
+            int currentQuantity = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+            dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") + (updatedQuantity - currentQuantity));
+            labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+            // Repaint the inventory table and history table
+            refreshInventoryTable();
+            historyTable.repaint();
+        }
+    }
+
+
+
+
+    
+    
+    
+    
+    public void deleteProduct() {
+        int selectedRow = inventoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            String removedName = inventoryTable.getValueAt(selectedRow, 0).toString();
+            int removedProducts = Integer.parseInt(inventoryTable.getValueAt(selectedRow, 4).toString());
+
+            // Remove the product from the table
+            DefaultTableModel model = (DefaultTableModel) inventoryTable.getModel();
+            model.removeRow(selectedRow);
+
+            // Update inventory stock
+            dashboardData.put("In-Stock", (int)dashboardData.get("In-Stock") - removedProducts);
+            labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+            // Remove the product from the linked list
+            ProductNode current = productList.head;
+            while (current != null) {
+                if (current.getName().equals(removedName)) {
+                    productList.removeProduct(current); // Assuming you have a remove method in the linked list
+                    break; // Exit once the product is removed
+                }
+                current = current.next;
+            }
+
+            // Create an Action for the "DELETE" event
+            Action deleteAction = new Action("DELETE", removedName, "", 0, 0, removedProducts);
+
+            // Add the delete action to the history
+            addActionToHistory(deleteAction);
+
+        } else {
+            JOptionPane.showMessageDialog(null, "No product selected");
+        }
+
+        // clear redoStack if action is new
+        while (!redoStack.isEmpty()) {
+            redoStack.pop();
+        }
+    }
+
+    
+    // Undo the delete action
+    public void undoDeleteProduct(Action lastAction) {
+        // Get the details of the deleted product from the last action
+        String productName = lastAction.getProductName();
+        int quantity = lastAction.getQuantity();
+        String category = lastAction.getCategory(); // Assuming you saved category in Action
+        double cost = lastAction.getCost(); // Assuming you saved cost in Action
+        double price = lastAction.getPrice(); // Assuming you saved price in Action
+
+        // Re-add the product to the linked list
+        ProductNode newNode = new ProductNode(productName, category, cost, price, quantity);
+        productList.addProduct(newNode);  // Assuming addProduct method adds the product to the linked list
+
+        // Restore the in-stock value
+        dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") + quantity);
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+        
+        // Remove the record from history
+        for (int i = 0; i < historyTableModel.getRowCount(); i++) {
+            if (historyTableModel.getValueAt(i, 1).equals(productName)) {
+                historyTableModel.removeRow(i);  // Remove the row from the table
+                historyTable.repaint();
+                break;  // Exit after removing the product
+            }
+        }
+
+        // Repaint the inventory table and history table
+        refreshInventoryTable();
+        historyTable.repaint();
+    }
+    
+
+    // Redo the delete action
+    public void redoDeleteProduct(Action lastAction) {
+        // Get the details of the deleted product from the last action
+        String productName = lastAction.getProductName();
+        int quantity = lastAction.getQuantity();
+
+        // Remove the product from the table
+        int selectedRow = getProductRowByName(productName);  // We will implement this below
+        if (selectedRow != -1) {
+            DefaultTableModel model = (DefaultTableModel) inventoryTable.getModel();
+            model.removeRow(selectedRow);
+        }
+
+        // Remove the product from the linked list
+        ProductNode current = productList.head;
+        while (current != null) {
+            if (current.getName().equals(productName)) {
+                productList.removeProduct(current); // Assuming you have a removeProduct method in the linked list
+                break;
+            }
+            current = current.next;
+        }
+
+        // Update the in-stock value
+        dashboardData.put("In-Stock", (int) dashboardData.get("In-Stock") - quantity);
+        labelInStockValue.setText(String.valueOf(dashboardData.get("In-Stock")));
+
+        // Repaint the inventory table and history table
+        refreshInventoryTable();
+        historyTable.repaint();
+    }
+
+    // Method to get the row index of a product by its name in the inventory table
+    private int getProductRowByName(String productName) {
+        for (int i = 0; i < inventoryTable.getRowCount(); i++) {
+            String currentProductName = inventoryTable.getValueAt(i, 0).toString();
+            if (currentProductName.equals(productName)) {
+                return i; // Return the row index if the product name matches
+            }
+        }
+        return -1; // Return -1 if the product is not found
+    }
+
+    
+    
     public static void main(String[] args) {
-        new Main();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                // run program
+                Main program = new Main();                
+            }
+        });
+    }
+}
+
+
+
+
+/*  
+ * CustomQueue.java  
+ *  
+ * A custom queue implementation designed to manage the queue of days in the profit chart.  
+ * This queue keeps track of data for the last 7 days, ensuring a rolling window of  
+ * recent profit information. It supports enqueue and dequeue operations to efficiently  
+ * update the profit chart data.  
+ */  
+
+class CustomQueue<T> {
+    private Object[] elements;
+    private int front, rear, size, capacity;
+
+    public CustomQueue(int capacity) {
+        this.capacity = capacity;
+        this.elements = new Object[capacity];
+        this.front = 0;
+        this.rear = -1;
+        this.size = 0;
+    }
+
+    public void enqueue(T item) {
+        if (size == capacity) {
+            dequeue(); // Dequeue the oldest item if the queue is full
+        }
+        rear = (rear + 1) % capacity;
+        elements[rear] = item;
+        size++;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T dequeue() {
+        if (size == 0) {
+            throw new IllegalStateException("Queue is empty");
+        }
+        T item = (T) elements[front];
+        front = (front + 1) % capacity;
+        size--;
+        return item;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T peek(int index) {
+        if (index >= size) {
+            throw new IndexOutOfBoundsException("Invalid index");
+        }
+        return (T) elements[(front + index) % capacity];
+    }
+
+    public int size() {
+        return size;
+    }
+}
+
+
+
+
+/*  
+ * Action.java  
+ *  
+ * A class that represents an action performed by the user and the product it affects.  
+ * Each action includes details like product name, category, cost, price, and quantity.  
+ * It is used in Stack and RedoStack for managing undo/redo operations, ensuring  
+ * precise tracking and restoration of user modifications.  
+ */  
+
+class Action {
+    private String type;         // Action type (e.g., "ADD", "SOLD")
+    private String productName;  // Name of the product involved in the action
+    private String category;     // Category of the product
+    private double cost;         // Cost of the product
+    private double price;        // Price of the product
+    private int quantity;        // Quantity involved in the action
+    
+    private String updatedProductName;
+    private String updatedCategory;
+    private double updatedCost;
+    private double updatedPrice;
+    private int updatedQuantity;
+
+    // Constructor for Action (for update actions, including both original and updated values)
+    public Action(String actionType, String productName, String category, double cost, double price, int quantity, 
+                  String updatedProductName, String updatedCategory, double updatedCost, double updatedPrice, int updatedQuantity) {
+        this.type = actionType;
+        this.productName = productName;
+        this.category = category;
+        this.cost = cost;
+        this.price = price;
+        this.quantity = quantity;
+
+        this.updatedProductName = updatedProductName;
+        this.updatedCategory = updatedCategory;
+        this.updatedCost = updatedCost;
+        this.updatedPrice = updatedPrice;
+        this.updatedQuantity = updatedQuantity;
+    }
+
+
+    // Constructor
+    public Action(String type, String productName, String category, double cost, double price, int quantity) {
+        this.type = type;
+        this.productName = productName;
+        this.category = category;
+        this.cost = cost;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    // Getters for each field
+    public String getType() {
+        return type;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+    
+    // Getters for updated product values
+    public String getUpdatedProductName() {
+        return updatedProductName;
+    }
+
+    public String getUpdatedCategory() {
+        return updatedCategory;
+    }
+
+    public double getUpdatedCost() {
+        return updatedCost;
+    }
+
+    public double getUpdatedPrice() {
+        return updatedPrice;
+    }
+
+    public int getUpdatedQuantity() {
+        return updatedQuantity;
+    }
+}
+
+
+
+
+/*  
+ * BarGraphPanel.java  
+ *  
+ * A panel used to visually display the profit chart data as a bar graph for the last 7 days.  
+ * It retrieves data from the CustomQueue, ensuring accurate and dynamic representation  
+ * of the most recent profit trends.  
+ */  
+
+class BarGraphPanel extends JPanel {
+    // QUEUE: Profit Data
+    private ProfitQueue profits;
+    private CustomQueue<String> days;
+    private String title = "Daily Profit (last 7 days)";
+    private int hoveredIndex = -1; // To track the hovered index for tooltips
+
+    public BarGraphPanel() {
+        setPreferredSize(new Dimension(250, 200)); // Adjust panel size
+        setBackground(new Color(220, 240, 240));
+        setBorder(BorderFactory.createLineBorder(new Color(220, 240, 240), 2));
+
+        // Initialize queues for profits and days
+        profits = new ProfitQueue(7);
+        days = new CustomQueue<>(7);
+
+        // Add initial profits
+        double[] initialProfits = {950.00, 1150.00, 800.00, 1050.00, 975.00, 1200.00, 1921.29};
+        for (double profit : initialProfits) {
+            profits.enqueue(profit);
+        }
+
+        // Add initial days
+        String[] initialDays = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+        for (String day : initialDays) {
+            days.enqueue(day);
+        }
+
+        // Timer to update profits and rotate days
+        Timer timer = new Timer(2500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Dequeue the oldest day and profit, then enqueue new data
+                String lastDay = days.dequeue();
+                profits.dequeue();
+
+                // Enqueue new day and profit
+                days.enqueue(lastDay);
+                profits.enqueue(800 + Math.random() * 1200); // Random profit
+
+                repaint();
+            }
+        });
+        timer.start();
+
+        // MouseListener for hovering effect
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                int barWidth = getWidth() / profits.size();
+                int mouseX = e.getX();
+                hoveredIndex = -1;
+                for (int i = 0; i < profits.size(); i++) {
+                    int x = i * barWidth + barWidth / 2;
+                    if (Math.abs(mouseX - x) < barWidth / 2) {
+                        hoveredIndex = i;
+                        break;
+                    }
+                }
+                repaint();
+            }
+        });
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        drawGraph(g);
+    }
+
+    public void drawGraph(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Get the width and height of the panel
+        int width = getWidth();
+        int height = getHeight();
+
+        // Calculate the width of each bar
+        int barWidth = width / profits.size();  
+
+        // Find the maximum profit for scaling the graph
+        double maxProfit = 0;
+        for (int i = 0; i < profits.size(); i++) {
+            double profit = profits.peek(i);  // Use peek() to get the value from the queue
+            if (profit > maxProfit) {
+                maxProfit = profit;
+            }
+        }
+
+        // Draw the bars
+        for (int i = 0; i < profits.size(); i++) {
+            double profit = profits.peek(i);  // Use peek() to get the value from the queue
+            int barHeight = (int) ((profit / 2000) * (height - 100)); // Scale bar height
+            int x = i * barWidth;
+            int y = height - barHeight - 60;
+
+            // Draw bars with light blue color
+            g2d.setColor(new Color(72, 145, 220));
+            g2d.fillRect(x + 10, y, barWidth - 20, barHeight); // Adjusted bar thickness
+
+            // Draw profit value above each bar
+            g2d.setColor(Color.BLACK);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 9)); // Smaller text
+            g2d.drawString(String.format("%.2f", profit), x + (barWidth / 2) - 12, y - 10);
+
+            // Draw tooltip if hovered
+            if (i == hoveredIndex && i != 0) {
+                double profit1 = profits.peek(i);
+                double profit2 = profits.peek(i - 1);
+                String tooltip;
+                if (profit1 > profit2) {
+                    tooltip = String.format("+%.2f", profit1-profit2);
+                    g2d.setColor(new Color(200, 255, 200));
+                } else if (profit2 > profit1) {
+                    tooltip = String.format("-%.2f", profit2-profit1);
+                    g2d.setColor(new Color(255, 220, 220));
+                } else { 
+                    tooltip = String.format("0.00");
+                    g2d.setColor(new Color(255, 255, 220));
+                }
+                FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
+                int tooltipWidth = metrics.stringWidth(tooltip) + 10;
+                int tooltipHeight = metrics.getHeight() + 4;
+                int tooltipX = x + (barWidth - tooltipWidth) / 2;
+                int tooltipY = y - tooltipHeight - 5;
+                g2d.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+                g2d.setColor(Color.BLACK);
+                g2d.drawRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+                g2d.drawString(tooltip, tooltipX + 5, tooltipY + metrics.getAscent());
+            }
+        }
+
+        // Draw x-axis
+        g2d.setColor(Color.BLACK);
+        g2d.drawLine(0, height - 60, width, height - 60);
+
+        // Draw a background for the labels area (to clear previous labels)
+        g2d.setColor(getBackground());  // Use the panel's background color
+        g2d.fillRect(0, height - 50, width, 50); // Clear the area where labels will be drawn
+
+        // Now draw the labels
+        g2d.setColor(Color.BLACK);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+        for (int i = 0; i < days.size(); i++) {
+            g2d.drawString(days.peek(i), (i * barWidth) + (barWidth / 2) - 10, height - 25);
+        }
+
+        // Draw title
+        g2d.setFont(new Font("Arial", Font.BOLD, 14));
+        g2d.setColor(new Color(84, 84, 84));
+        g2d.drawString(title, (width - g2d.getFontMetrics().stringWidth(title)) / 2, 20);
+
+        // Draw the line graph on top of the bars
+        g2d.setColor(new Color(255, 165, 0)); // Orange color
+        g2d.setStroke(new BasicStroke(3)); // Thicker line
+        for (int i = 0; i < profits.size() - 1; i++) {
+            double profit1 = profits.peek(i);  // Use peek() to get the value from the queue
+            double profit2 = profits.peek(i + 1);  // Use peek() to get the value from the queue
+            int x1 = (i * barWidth) + (barWidth / 2);
+            int y1 = height - (int) ((profit1 / maxProfit) * (height - 100)) - 60;
+            int x2 = ((i + 1) * barWidth) + (barWidth / 2);
+            int y2 = height - (int) ((profit2 / maxProfit) * (height - 100)) - 60;
+            g2d.drawLine(x1, y1, x2, y2);
+        }
+    }
+
+}
+
+
+
+
+/*  
+ * PieChartPanel.java  
+ *  
+ * A panel used to display a pie chart that illustrates the share of each category.  
+ * This provides users with a clear graphical representation of the inventory's  
+ * category distribution.  
+ */  
+
+class PieChartPanel extends JPanel {
+
+    // Category data
+    private String[] categories = {"Electronics", "Food", "Accessories", "Office Supplies"};
+    private int[] counts = {6, 6, 2, 1};
+    private Color[] colors = {new Color(72, 145, 220), new Color(232, 77, 98), new Color(255, 165, 0), new Color(109, 191, 115)};
+    private String title = "Category Distribution";
+
+    // Constructor to set up the panel
+    public PieChartPanel() {
+        setPreferredSize(new Dimension(250, 200));
+        setBackground(new Color(220, 240, 240)); 
+        setBorder(BorderFactory.createLineBorder(new Color(220, 240, 240))); // Border color RGB(130, 184, 167)
+    }
+
+    // Method to draw the pie chart
+    public void drawPieChart(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Get the width and height of the panel
+        int width = getWidth();
+        int height = getHeight();
+        int minSize = Math.min(width, height);
+        int cx = width / 2;
+        int cy = height / 2;
+        int radius = minSize / 3; // Adjusted radius for a smaller pie chart
+
+        // Draw title
+        g2d.setColor(new Color(84, 84, 84));
+        g2d.setFont(new Font("Arial", Font.BOLD, 14));
+        FontMetrics metrics = g2d.getFontMetrics();
+        int titleWidth = metrics.stringWidth(title);
+        g2d.drawString(title, (width - titleWidth) / 2, 15);
+
+        // Draw pie slices
+        double total = 0;
+        for (int count : counts) {
+            total += count;
+        }
+
+        double startAngle = 0;
+        for (int i = 0; i < counts.length; i++) {
+            double arcAngle = (counts[i] / total) * 360;
+            g2d.setColor(colors[i]);
+            g2d.fill(new Arc2D.Double(cx - radius, cy - radius, 2 * radius, 2 * radius, startAngle, arcAngle, Arc2D.PIE));
+
+            // Calculate midpoint angle of the slice
+            double midAngle = Math.toRadians(startAngle + arcAngle / 2);
+            int labelRadius = radius + 20;
+            int labelX = (int) (cx + labelRadius * Math.cos(midAngle));
+            int labelY = (int) (cy + labelRadius * Math.sin(midAngle));
+
+            // Draw percentage text
+            g2d.setColor(Color.BLACK);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 10));
+            String percentageText = String.format("%.1f%%", (counts[i] / total) * 100);
+            g2d.drawString(percentageText, labelX - g2d.getFontMetrics().stringWidth(percentageText) / 2, labelY + 5);
+
+            // Draw category text
+            String categoryText = categories[i];
+            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+            g2d.drawString(categoryText, labelX - g2d.getFontMetrics().stringWidth(categoryText) / 2, labelY - 5);
+
+            // Draw arrow-like line indicator
+            int arrowLength = 15;
+            int arrowX = (int) (cx + (radius + arrowLength) * Math.cos(midAngle));
+            int arrowY = (int) (cy + (radius + arrowLength) * Math.sin(midAngle));
+            g2d.drawLine(cx, cy, arrowX, arrowY);
+
+            startAngle += arcAngle;
+        }
+    }
+
+    // Override the paintComponent method to call drawPieChart
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        drawPieChart(g);
     }
 }
